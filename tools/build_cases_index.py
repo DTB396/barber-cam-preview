@@ -74,7 +74,7 @@ if __name__ == "__main__":
             reader = PdfReader(io.BytesIO(pdf))
             all_text = []
             pages_with_text = 0
-            for i, page in enumerate(reader.pages):
+            for page in reader.pages:
                 t = page.extract_text() or ""
                 t = clean_text(t)
                 if t:
