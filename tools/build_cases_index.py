@@ -10,6 +10,7 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 MANIFEST = Path("cases/manifest.json")
 INDEX_OUT = OUT_DIR / "index.json"
+MAX_SNIPPET_LENGTH = 240
 
 def clean_text(s: str) -> str:
     s = s.replace("\x00", " ")
@@ -36,7 +37,7 @@ def extract_text_from_pdf(pdf_bytes: bytes) -> tuple[str, int]:
             parts.append(t)
     return ("\n".join(parts), pages_with_text)
 
-def snippet(text: str, max_len: int = 240) -> str:
+def snippet(text: str, max_len: int = MAX_SNIPPET_LENGTH) -> str:
     t = clean_text(text)
     return t[:max_len] + ("…" if len(t) > max_len else "")
 
