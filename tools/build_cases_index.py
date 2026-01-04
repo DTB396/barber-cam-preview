@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     if not MANIFEST.exists():
         print(f"Missing {MANIFEST}. Create cases/manifest.json first.", file=sys.stderr)
-        sys.exit(2)
+        sys.exit(1)
 
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     index = []
