@@ -1,4 +1,4 @@
-<article class="md" role="article">
+<article class="md">
   <header class="md-header">
     <h1 class="md-title">Barber-Cam Vision</h1>
     <p class="md-lead">Barber Cam exists to preserve truth, reduce harm, and reinforce accountability through ethical record-keeping.</p>
