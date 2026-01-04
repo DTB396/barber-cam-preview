@@ -128,6 +128,7 @@ function escapeHtml(s) {
 }
 
 async function init() {
+<<<<<<< HEAD
   const res = await fetch("./data/index.json", { cache: "no-store" });
 <<<<<<< HEAD
   if (!res.ok) {
@@ -135,6 +136,9 @@ async function init() {
   }
 =======
 >>>>>>> 59324ed (Add initial implementation of search functionality)
+=======
+  const res = await fetch("./data/index.json");
+>>>>>>> 2dad80f (Update docs/app.js)
   data = await res.json();
   $meta.textContent = `${data.length} document(s) indexed`;
   render("");
