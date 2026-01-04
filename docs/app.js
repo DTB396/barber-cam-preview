@@ -72,7 +72,7 @@ function escapeHtml(s) {
 }
 
 async function init() {
-  const res = await fetch("./data/index.json", { cache: "no-store" });
+  const res = await fetch("./data/index.json");
   data = await res.json();
   $meta.textContent = `${data.length} document(s) indexed`;
   render("");
