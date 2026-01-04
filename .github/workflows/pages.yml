@@ -33,7 +33,11 @@ jobs:
 
       - name: Build case index
         run: |
-          python tools/build_cases_index.py
+          if [ -f tools/build_cases_index.py ]; then
+            python tools/build_cases_index.py
+          else
+            echo "tools/build_cases_index.py not found; skipping case index build step."
+          fi
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
