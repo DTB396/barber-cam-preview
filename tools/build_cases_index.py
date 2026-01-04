@@ -45,12 +45,23 @@ def fetch_pdf(url: str, max_size_mb: int = 100) -> bytes:
             if file_size > max_size_bytes:
                 raise ValueError(f"PDF size ({file_size / 1024 / 1024:.1f}MB) exceeds maximum allowed size ({max_size_mb}MB)")
         
-        # Read the content with size validation
-        content = r.read(max_size_bytes + 1)
-        if len(content) > max_size_bytes:
-            raise ValueError(f"PDF size exceeds maximum allowed size ({max_size_mb}MB)")
+        # Read the content in chunks to avoid loading oversized files into memory
+        chunk_size = 8192  # 8KB chunks
+        chunks = []
+        total_size = 0
         
-        return content
+        while True:
+            chunk = r.read(chunk_size)
+            if not chunk:
+                break
+            
+            total_size += len(chunk)
+            if total_size > max_size_bytes:
+                raise ValueError(f"PDF size exceeds maximum allowed size ({max_size_mb}MB)")
+            
+            chunks.append(chunk)
+        
+        return b''.join(chunks)
 
 def extract_text_from_pdf(pdf_bytes: bytes) -> tuple[str, int]:
     reader = PdfReader(io.BytesIO(pdf_bytes))
