@@ -107,12 +107,13 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  color: var(--accent);
+  color: #f5f7f6;                 /* soft off-white */
+  background-color: #0b5f2c;     /* muted green */
   margin-bottom: 1rem;
   padding: 0.4rem 1rem;
-  background: rgb(8, 99, 39);
-  border-radius: 100px;
+  border-radius: 999px;
 }
+
 
 .section-title {
   font-size: clamp(2.5rem, 6vw, 4rem);
