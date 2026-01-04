@@ -1756,42 +1756,7 @@ h1, h2, h3, h4, h5, h6 {
    MOBILE NAV
 ════════════════════════════════════════════════ */ 
 
-<script>
-(() => {
-  // CHANGE THESE SELECTORS to match your markup
-  const drawer   = document.querySelector('.mobile-drawer, .nav-drawer, [data-drawer]');
-  const body     = document.body;
-
-  // If you use a checkbox toggle, include it too (optional)
-  const drawerCheckbox = document.querySelector('#nav-toggle, .nav-toggle input[type="checkbox"]');
-
-  if (!drawer) return;
-
-  const closeDrawer = () => {
-    drawer.classList.remove('is-open');
-    body.classList.remove('drawer-open');
-    drawer.setAttribute('aria-hidden', 'true');
-    if (drawerCheckbox) drawerCheckbox.checked = false;
-  };
-
-  // Close when any nav link is clicked (anchors or internal routes)
-  drawer.addEventListener('click', (e) => {
-    const link = e.target.closest('a');
-    if (!link) return;
-
-    // If it's a real link click, close drawer immediately.
-    // For same-page anchors, closing first still allows the browser to scroll.
-    closeDrawer();
-  });
-
-  // Also close on hash change (covers programmatic navigation / smooth scroll libs)
-  window.addEventListener('hashchange', closeDrawer);
-
-  // Optional: close on back/forward navigation
-  window.addEventListener('popstate', closeDrawer);
-})();
-</script>
-
+/* Mobile navigation behavior moved to external JavaScript. */
 /* ═════════════════════════════════════════════
    SECTIONS / PAGE HEADERS
    Section tag: high contrast in all situations
