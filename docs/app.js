@@ -4,6 +4,7 @@ const $meta = document.getElementById("meta");
 
 let data = [];
 
+<<<<<<< HEAD
 /**
  * Computes a relevance score for how well a text matches a query.
  *
@@ -29,6 +30,8 @@ let data = [];
  * @param {string} text - The text content to be scored against the `query`.
  * @returns {number} A non-negative integer relevance score for the match.
  */
+=======
+>>>>>>> 59324ed (Add initial implementation of search functionality)
 function scoreMatch(query, text) {
   if (!query) return 0;
   const q = query.toLowerCase().trim();
@@ -49,6 +52,7 @@ function scoreMatch(query, text) {
   return score;
 }
 
+<<<<<<< HEAD
 /**
  * Renders the search results for the given query.
  *
@@ -74,6 +78,8 @@ function scoreMatch(query, text) {
  * @param {string} query - The search query string; may be empty or whitespace.
  *                         An empty query shows up to 50 unfiltered items.
  */
+=======
+>>>>>>> 59324ed (Add initial implementation of search functionality)
 function render(query) {
   const q = (query || "").trim();
   const rows = data
@@ -123,9 +129,12 @@ function escapeHtml(s) {
 
 async function init() {
   const res = await fetch("./data/index.json", { cache: "no-store" });
+<<<<<<< HEAD
   if (!res.ok) {
     throw new Error(`Failed to fetch index.json: ${res.status} ${res.statusText}`);
   }
+=======
+>>>>>>> 59324ed (Add initial implementation of search functionality)
   data = await res.json();
   $meta.textContent = `${data.length} document(s) indexed`;
   render("");
