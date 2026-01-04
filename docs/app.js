@@ -122,10 +122,17 @@ function escapeHtml(s) {
 }
 
 /**
- * Sanitizes a URL to ensure it uses a safe protocol (http or https).
+ * Sanitizes a URL to ensure it uses a safe protocol (http or https) or is a safe relative path.
+ *
+ * This function validates URLs to prevent XSS attacks via malicious protocols (e.g., javascript:, data:).
+ * It accepts:
+ * - Absolute URLs with http: or https: protocols
+ * - Relative paths explicitly starting with /, ./, or ../
+ *
+ * All other URLs, including protocol-relative URLs (//), are rejected.
  *
  * @param {string} url - The URL to sanitize.
- * @returns {string} The sanitized URL if it uses a safe protocol, or "#" otherwise.
+ * @returns {string} The sanitized URL if it uses a safe protocol or is a safe relative path, or "#" otherwise.
  */
 function sanitizeUrl(url) {
   if (!url) return "#";
