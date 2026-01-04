@@ -1,10 +1,10 @@
-baseDir = "."
+﻿baseDir = "."
 strictCheck = true
 useDefaultExcludes = true
 useDefaultMapping = true
 
 inlineHeader = """\
-Copyright © 2024–2026 BARBER CAM, Faith Frontier Ecclesiastical Trust. All rights reserved.
+Copyright © 2024–2026 BARBER CAM, Faith Frontier Ecclesiastical Trust. All rights reserved. 
 PROPRIETARY — See LICENSE.\
 """
 
@@ -36,20 +36,4 @@ excludes = [
   "**/.git/**"
 ]
 
-[mapping]
-py   = "#"
-js   = "//"
-ts   = "//"
-tsx  = "//"
-jsx  = "//"
-go   = "//"
-rs   = "//"
-java = "//"
-kt   = "//"
-c    = "/*"
-h    = "/*"
-cpp  = "/*"
-hpp  = "/*"
-sh   = "#"
-yaml = "#"
-yml  = "#"
+mapping = { py="#", js="//", ts="//", tsx="//", jsx="//", go="//", rs="//", java="//", kt="//", c="/*", h="/*", cpp="/*", hpp="/*", sh="#", yaml="#", yml="#" }
