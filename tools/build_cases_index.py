@@ -19,10 +19,38 @@ def clean_text(s: str) -> str:
 def sha1(s: str) -> str:
     return hashlib.sha1(s.encode("utf-8", errors="ignore")).hexdigest()
 
-def fetch_pdf(url: str) -> bytes:
+def fetch_pdf(url: str, max_size_mb: int = 100) -> bytes:
+    """
+    Fetch a PDF from a URL with size validation to prevent memory exhaustion.
+    
+    Args:
+        url: The URL to fetch
+        max_size_mb: Maximum allowed file size in megabytes (default: 100MB)
+    
+    Returns:
+        The PDF content as bytes
+    
+    Raises:
+        ValueError: If the file size exceeds max_size_mb
+        urllib.error.URLError: If the download fails
+    """
+    max_size_bytes = max_size_mb * 1024 * 1024
     req = Request(url, headers={"User-Agent": "BarberCamPreviewIndexer/1.0"})
+    
     with urlopen(req, timeout=60) as r:
-        return r.read()
+        # Check Content-Length header if available
+        content_length = r.getheader('Content-Length')
+        if content_length:
+            file_size = int(content_length)
+            if file_size > max_size_bytes:
+                raise ValueError(f"PDF size ({file_size / 1024 / 1024:.1f}MB) exceeds maximum allowed size ({max_size_mb}MB)")
+        
+        # Read the content with size validation
+        content = r.read(max_size_bytes + 1)
+        if len(content) > max_size_bytes:
+            raise ValueError(f"PDF size exceeds maximum allowed size ({max_size_mb}MB)")
+        
+        return content
 
 def extract_text_from_pdf(pdf_bytes: bytes) -> tuple[str, int]:
     reader = PdfReader(io.BytesIO(pdf_bytes))
