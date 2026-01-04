@@ -132,6 +132,9 @@ function sanitizeUrl(url) {
   const trimmed = String(url).trim();
   if (!trimmed) return "#";
   
+  // Reject protocol-relative URLs (e.g., //malicious.com)
+  if (trimmed.startsWith("//")) return "#";
+  
   // Allow explicit relative paths
   if (trimmed.startsWith("/") || trimmed.startsWith("./") || trimmed.startsWith("../")) {
     return trimmed;
