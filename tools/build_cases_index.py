@@ -104,7 +104,7 @@ if __name__ == "__main__":
             "ocrNeeded": ocr_needed,
             "textHash": sha1(text) if text else None,
             "snippet": snippet(text) if text else "",
-            "text": text,  # NOTE: this makes the JSON big; keep for MVP demo
+            # Full text is intentionally omitted from the index to keep JSON size manageable.
         })
 
     INDEX_OUT.write_text(json.dumps(index, ensure_ascii=False), encoding="utf-8")
