@@ -1,4 +1,11 @@
-﻿baseDir = "."
+# HawkEye v6 config
+
+baseDir = "."
+
+# Prefer inlineHeader OR headerPath (inlineHeader wins)
+inlineHeader = """\
+Copyright © 2024–2026 Faith Frontier. All rights reserved.
+baseDir = "."
 strictCheck = true
 useDefaultExcludes = true
 useDefaultMapping = true
@@ -8,6 +15,14 @@ Copyright © 2024–2026 BARBER CAM, Faith Frontier Ecclesiastical Trust. All ri
 PROPRIETARY — See LICENSE.\
 """
 
+# Strict match (your “SOLO STRICT”)
+strictCheck = true
+
+# Let HawkEye handle typical excludes + language comment styles
+useDefaultExcludes = true
+useDefaultMapping = true
+
+# Only scan what you care about
 includes = [
   "**/*.py",
   "**/*.js",
@@ -27,6 +42,7 @@ includes = [
   "**/*.yml"
 ]
 
+# Extra excludes beyond default ones (optional)
 excludes = [
   "**/node_modules/**",
   "**/.venv/**",
