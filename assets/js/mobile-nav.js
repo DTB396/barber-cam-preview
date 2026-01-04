@@ -33,7 +33,11 @@
     link.addEventListener("click", () => {
       closeNav();
       // Optional: return focus to toggle for accessibility
-      requestAnimationFrame(() => navToggle.focus?.());
+      requestAnimationFrame(() => {
+        if (navToggle && typeof navToggle.focus === "function") {
+          navToggle.focus();
+        }
+      });
     });
   });
 
