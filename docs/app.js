@@ -108,7 +108,7 @@ function render(query) {
         ${item.snippet ? `<div class="snip">${escapeHtml(item.snippet)}</div>` : ""}
         ${err}
         <div class="actions">
-          <a class="btn primary" href="${item.url}" target="_blank" rel="noopener">Open PDF</a>
+          <a class="btn primary" href="${sanitizeUrl(item.url)}" target="_blank" rel="noopener">Open PDF</a>
         </div>
       </div>
     `;
@@ -119,6 +119,33 @@ function escapeHtml(s) {
   return (s || "").replace(/[&<>"']/g, c => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
   }[c]));
+}
+
+/**
+ * Validates and sanitizes a URL to ensure it uses a safe protocol.
+ *
+ * Only URLs with http: or https: protocols are considered safe.
+ * If the URL is invalid, uses a dangerous protocol (e.g., javascript:),
+ * or cannot be parsed, the function returns "#" as a safe fallback.
+ *
+ * @param {string} url - The URL to validate and sanitize.
+ * @returns {string} The original URL if safe, otherwise "#".
+ */
+function sanitizeUrl(url) {
+  if (!url || typeof url !== 'string') {
+    return "#";
+  }
+  
+  try {
+    const parsed = new URL(url, window.location.href);
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      return url;
+    }
+  } catch (e) {
+    // Invalid URL
+  }
+  
+  return "#";
 }
 
 async function init() {
