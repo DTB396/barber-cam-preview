@@ -1,6 +1,6 @@
 <article class="md" role="article">
   <header class="md-header">
-    <h1 class="md-title">Governance & Ethics (in Active Development</h1>
+    <h1 class="md-title">Governance & Ethics (in Active Development)</h1>
     <p class="md-lead">Barber Cam is being built with a stewardship-first approach. The project’s legitimacy depends on restraint, transparency, and due process.</p>
   </header>
 
