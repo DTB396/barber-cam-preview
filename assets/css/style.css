@@ -1,9 +1,134 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   BARBER CAM — NY Barbershop Style
+/* ================================================
+   MAIN STYLESHEET
+   Project: Barber Cam
+   Purpose: Global layout, components, utilities
+   Author: Devon Tyler Barber
+   Last updated: 2026-01-04
+   Style:  NY Barbershop Style
    Precision. Patience. Virtue. Honor.
    Modern, Clean, Smooth with 90s Nostalgia
-═══════════════════════════════════════════════════════════════════════════ */
+   ============================================= */
 
+/* ═════════════════════════════════════════════
+   TOOLS
+════════════════════════════════════════════════ */
+
+/* Applied when contrast is too low */
+.contrast-fix{
+  color: var(--contrast-fix-color, #000) !important;
+  text-shadow:
+    0 1px 0 rgba(255,255,255,.65),
+    0 0 2px rgba(0,0,0,.40),
+    0 6px 18px rgba(0,0,0,.22);
+}
+
+<script>
+(() => {
+  const MIN_RATIO = 4.5; // 4.5 = WCAG AA for normal text (3.0 for large text)
+
+  // Which elements to auto-check:
+  // Add data-contrast="auto" to anything critical (recommended),
+  // OR expand the selector list below.
+  const TARGET_SELECTOR = '[data-contrast="auto"]';
+
+  const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
+
+  const parseColor = (str) => {
+    // Handles rgb/rgba only (getComputedStyle returns rgb/rgba in most cases)
+    const m = str.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([.\d]+))?\)/i);
+    if (!m) return null;
+    return {
+      r: +m[1], g: +m[2], b: +m[3],
+      a: m[4] === undefined ? 1 : +m[4],
+    };
+  };
+
+  const srgbToLin = (c) => {
+    c /= 255;
+    return (c <= 0.04045) ? (c / 12.92) : Math.pow((c + 0.055) / 1.055, 2.4);
+  };
+
+  const luminance = ({r,g,b}) => {
+    const R = srgbToLin(r), G = srgbToLin(g), B = srgbToLin(b);
+    return 0.2126*R + 0.7152*G + 0.0722*B;
+  };
+
+  const contrastRatio = (c1, c2) => {
+    const L1 = luminance(c1);
+    const L2 = luminance(c2);
+    const hi = Math.max(L1, L2);
+    const lo = Math.min(L1, L2);
+    return (hi + 0.05) / (lo + 0.05);
+  };
+
+  const blendOver = (fg, bg) => {
+    // alpha blend fg over bg
+    const a = clamp(fg.a, 0, 1);
+    return {
+      r: Math.round(fg.r * a + bg.r * (1 - a)),
+      g: Math.round(fg.g * a + bg.g * (1 - a)),
+      b: Math.round(fg.b * a + bg.b * (1 - a)),
+      a: 1
+    };
+  };
+
+  const findEffectiveBackground = (el) => {
+    // Walk up until we find a non-transparent background-color
+    let node = el;
+    while (node && node !== document.documentElement) {
+      const bg = parseColor(getComputedStyle(node).backgroundColor);
+      if (bg && bg.a > 0.01) return bg;
+      node = node.parentElement;
+    }
+    // fallback to root background
+    const rootBg = parseColor(getComputedStyle(document.documentElement).backgroundColor);
+    return rootBg || {r:255,g:255,b:255,a:1};
+  };
+
+  const bestBW = (bg) => {
+    const black = {r:0,g:0,b:0,a:1};
+    const white = {r:255,g:255,b:255,a:1};
+    return (contrastRatio(black, bg) >= contrastRatio(white, bg)) ? black : white;
+  };
+
+  const fixOne = (el) => {
+    const cs = getComputedStyle(el);
+    const fg = parseColor(cs.color);
+    if (!fg) return;
+
+    let bg = findEffectiveBackground(el);
+    // If fg has alpha, approximate blending onto bg
+    const effectiveFg = fg.a < 1 ? blendOver(fg, bg) : {r:fg.r,g:fg.g,b:fg.b,a:1};
+
+    const ratio = contrastRatio(effectiveFg, bg);
+
+    if (ratio < MIN_RATIO) {
+      const chosen = bestBW(bg);
+      el.classList.add('contrast-fix');
+      el.style.setProperty('--contrast-fix-color', `rgb(${chosen.r}, ${chosen.g}, ${chosen.b})`);
+    } else {
+      el.classList.remove('contrast-fix');
+      el.style.removeProperty('--contrast-fix-color');
+    }
+  };
+
+  const scan = () => {
+    document.querySelectorAll(TARGET_SELECTOR).forEach(fixOne);
+  };
+
+  // Run now, then on resize (layout changes affect backgrounds)
+  scan();
+  window.addEventListener('resize', () => scan(), {passive:true});
+
+  // Observe DOM changes (new elements injected, class changes, etc.)
+  const mo = new MutationObserver(() => scan());
+  mo.observe(document.documentElement, {subtree:true, childList:true, attributes:true});
+})();
+</script>
+
+/* ═════════════════════════════════════════════
+   ROOT
+════════════════════════════════════════════════ */
 :root {
   /* Core Colors - Classic Barbershop */
   --ink: #0a0a0f;
@@ -45,9 +170,89 @@
   --transition-slow: 0.5s var(--ease-smooth);
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════
+   THEME (AUTO: SYSTEM DEFAULT)
+   Uses prefers-color-scheme. No toggle needed.
+   DARK -> Light
+════════════════════════════════════════════════ */
+/* Tell the browser we support both so built-in UI (forms/scrollbars) matches */
+:root{
+  color-scheme: light dark;
+
+  /* LIGHT (default) */
+  --bg: #ffffff;
+  --surface: #f6f7f9;          /* cards / panels */
+  --surface-2: #eef1f4;        /* subtle alt surface */
+  --text: #0b1220;
+  --text-muted: rgba(11,18,32,.72);
+  --border: rgba(11,18,32,.16);
+
+  --shadow: 0 10px 30px rgba(0,0,0,.10);
+
+  /* Brand / accent (tune these) */
+  --accent: #1d4ed8;
+  --accent-2: #d62828;
+
+  /* Focus ring (accessibility) */
+  --focus: 0 0 0 3px rgba(29,78,216,.35);
+}
+
+/* DARK (system) */
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg: #0b1220;
+    --surface: rgba(255,255,255,.06);
+    --surface-2: rgba(255,255,255,.10);
+    --text: #ffffff;
+    --text-muted: rgba(255,255,255,.74);
+    --border: rgba(255,255,255,.16);
+
+    --shadow: 0 12px 36px rgba(0,0,0,.55);
+
+    --focus: 0 0 0 3px rgba(59,130,246,.40);
+  }
+}
+
+/* Base application of tokens */
+html, body{
+  background: var(--bg);
+  color: var(--text);
+}
+
+a{ color: var(--accent); }
+a:hover{ filter: brightness(1.05); }
+
+hr{ border-color: var(--border); }
+
+::selection{
+  background: var(--bg);
+}
+
+/* Surfaces */
+.card, .panel, .surface{
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+/* Text helpers */
+.muted{ color: var(--text-muted); }
+
+/* Form controls (optional but helps a lot) */
+input, select, textarea{
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+input:focus, select:focus, textarea:focus, button:focus{
+  outline: none;
+  box-shadow: var(--focus);
+}
+
+/* ═════════════════════════════════════════════
    BASE STYLES
-═══════════════════════════════════════════════════════════════════════════ */
+════════════════════════════════════════════════ */
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -92,9 +297,9 @@ ul, ol {
   list-style: none;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════
    TYPOGRAPHY
-═══════════════════════════════════════════════════════════════════════════ */
+════════════════════════════════════════════════ */
 
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Bebas Neue', 'Inter', sans-serif;
@@ -112,7 +317,7 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--accent);
   margin-bottom: 1rem;
   padding: 0.4rem 1rem;
-  background: rgb(8, 99, 39);
+  background: var(--bg);
   border-radius: 100px;
 }
 
@@ -130,9 +335,9 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1.7;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════
    LAYOUT
-═══════════════════════════════════════════════════════════════════════════ */
+════════════════════════════════════════════════ */ 
 
 .container {
   width: 100%;
@@ -146,9 +351,9 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 4rem;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════
    HEADER
-═══════════════════════════════════════════════════════════════════════════ */
+════════════════════════════════════════════════ */ 
 
 .site-header {
   position: fixed;
@@ -183,11 +388,6 @@ h1, h2, h3, h4, h5, h6 {
 .brand-icon {
   font-size: 1.25rem;
   color: var(--accent);
-}
-
-.brand-text {
-  color: #fff;
-  -webkit-text-fill-color: #fff;
 }
 
 .main-nav {
@@ -241,9 +441,9 @@ h1, h2, h3, h4, h5, h6 {
   transition: var(--transition-base);
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════
    BUTTONS
-═══════════════════════════════════════════════════════════════════════════ */
+════════════════════════════════════════════════ */ 
 
 .btn {
   display: inline-flex;
@@ -310,9 +510,9 @@ h1, h2, h3, h4, h5, h6 {
   width: 100%;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════
    HERO SECTION
-═══════════════════════════════════════════════════════════════════════════ */
+════════════════════════════════════════════════ */ 
 
 .hero {
   position: relative;
@@ -383,7 +583,7 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: rgba(196, 30, 58, 0.08);
+  background: var(--bg);
   border-radius: 100px;
   font-size: 0.8rem;
   font-weight: 600;
@@ -565,10 +765,9 @@ h1, h2, h3, h4, h5, h6 {
   50% { opacity: 0.5; height: 30px; }
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════
    PREVIEW SECTION
-═══════════════════════════════════════════════════════════════════════════ */
-
+════════════════════════════════════════════════ */ 
 .preview-section {
   padding: 8rem 0;
   background: var(--bg);
@@ -774,9 +973,9 @@ h1, h2, h3, h4, h5, h6 {
   flex-wrap: wrap;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════
    PRINCIPLES SECTION
-═══════════════════════════════════════════════════════════════════════════ */
+════════════════════════════════════════════════ */ 
 
 .principles-section {
   padding: 8rem 0;
@@ -873,9 +1072,9 @@ h1, h2, h3, h4, h5, h6 {
   margin: 0 auto;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════
    STATUS SECTION
-═══════════════════════════════════════════════════════════════════════════ */
+════════════════════════════════════════════════ */ 
 
 .status-section {
   padding: 8rem 0;
@@ -1032,10 +1231,9 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--accent);
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   CONNECT SECTION
-═══════════════════════════════════════════════════════════════════════════ */
-
+/* ═════════════════════════════════════════════
+   CONTENT SECTION
+════════════════════════════════════════════════ */ 
 .connect-section {
   padding: 0.5rem 0;
   background: var(--alt);
@@ -1165,9 +1363,9 @@ h1, h2, h3, h4, h5, h6 {
   flex-shrink: 0;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════
    FOOTER
-═══════════════════════════════════════════════════════════════════════════ */
+════════════════════════════════════════════════ */ 
 
 .site-footer {
   background: #0a0a0f;
@@ -1308,10 +1506,9 @@ h1, h2, h3, h4, h5, h6 {
   color: rgba(255, 255, 255, 0.3);
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════
    RESPONSIVE
-═══════════════════════════════════════════════════════════════════════════ */
-
+════════════════════════════════════════════════ */ 
 @media (max-width: 1024px) {
   .hero .container {
     grid-template-columns: 1fr;
@@ -1401,9 +1598,9 @@ h1, h2, h3, h4, h5, h6 {
         }
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════
    DARK MODE
-═══════════════════════════════════════════════════════════════════════════ */
+════════════════════════════════════════════════ */ 
 
 @media (prefers-color-scheme: dark) {
   :root {
@@ -1471,4 +1668,185 @@ h1, h2, h3, h4, h5, h6 {
   .main-nav {
     background: var(--bg);
   }
+}
+/* ═════════════════════════════════════════════
+   BRAND / WORDMARK (Barber pole text — premium + readable on light/dark)
+════════════════════════════════════════════════ */ 
+
+:root{
+  --barber-red:  #d62828;
+  --barber-white:#ffffff;
+  --barber-blue: #1d4ed8;
+
+  /* Default fallback (light theme) */
+  --brand-text-fallback: #0b1220;
+  --brand-edge-light: rgba(255,255,255,.65);
+  --brand-edge-dark: rgba(0,0,0,.50);
+}
+
+/* If you use system dark mode tokens, sync fallback automatically */
+@media (prefers-color-scheme: dark){
+  :root{
+    --brand-text-fallback: #ffffff;
+    --brand-edge-light: rgba(255,255,255,.55);
+    --brand-edge-dark: rgba(0,0,0,.70);
+  }
+}
+
+.brand{
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  text-decoration:none;
+}
+
+/* Icon: visible in both themes */
+.brand-icon{
+  color: var(--brand-text-fallback) !important;
+  filter:
+    drop-shadow(0 1px 0 var(--brand-edge-light))
+    drop-shadow(0 0 2px var(--brand-edge-dark));
+}
+
+.brand-text{
+  /* Fallback readable if clip-to-text isn't supported */
+  color: var(--brand-text-fallback) !important;
+
+  font-weight: 850;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  line-height: 1;
+
+  /* Premium readability edge in both themes */
+  text-shadow:
+    0 1px 0 var(--brand-edge-light),
+    0 0 2px var(--brand-edge-dark),
+    0 10px 22px rgba(0,0,0,.18);
+}
+
+/* Barber-pole effect: diagonal stripes clipped to text */
+@supports (-webkit-background-clip: text) or (background-clip: text){
+  .brand-text{
+    background-image: repeating-linear-gradient(
+      45deg,
+      var(--barber-red) 0 10px,
+      var(--barber-white) 10px 20px,
+      var(--barber-blue) 20px 30px,
+      var(--barber-white) 30px 40px
+    );
+
+    /* High-end feel: slightly smaller pattern + smoother travel */
+    background-size: 200% 200%;
+    animation: barberScroll 1.9s linear infinite;
+
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    /* Crisp outline that survives light AND dark */
+    filter:
+      drop-shadow(0 1px 0 var(--brand-edge-light))
+      drop-shadow(0 0 2px var(--brand-edge-dark))
+      drop-shadow(0 10px 24px rgba(0,0,0,.18));
+
+    will-change: background-position;
+  }
+}
+
+@keyframes barberScroll{
+  from{ background-position: 0% 0%; }
+  to  { background-position: 140% 140%; }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce){
+  .brand-text{
+    animation: none !important;
+    background-position: 50% 50%;
+  }
+}
+
+/* ═════════════════════════════════════════════
+   MOBILE NAV
+════════════════════════════════════════════════ */ 
+
+<script>
+(() => {
+  // CHANGE THESE SELECTORS to match your markup
+  const drawer   = document.querySelector('.mobile-drawer, .nav-drawer, [data-drawer]');
+  const body     = document.body;
+
+  // If you use a checkbox toggle, include it too (optional)
+  const drawerCheckbox = document.querySelector('#nav-toggle, .nav-toggle input[type="checkbox"]');
+
+  if (!drawer) return;
+
+  const closeDrawer = () => {
+    drawer.classList.remove('is-open');
+    body.classList.remove('drawer-open');
+    drawer.setAttribute('aria-hidden', 'true');
+    if (drawerCheckbox) drawerCheckbox.checked = false;
+  };
+
+  // Close when any nav link is clicked (anchors or internal routes)
+  drawer.addEventListener('click', (e) => {
+    const link = e.target.closest('a');
+    if (!link) return;
+
+    // If it's a real link click, close drawer immediately.
+    // For same-page anchors, closing first still allows the browser to scroll.
+    closeDrawer();
+  });
+
+  // Also close on hash change (covers programmatic navigation / smooth scroll libs)
+  window.addEventListener('hashchange', closeDrawer);
+
+  // Optional: close on back/forward navigation
+  window.addEventListener('popstate', closeDrawer);
+})();
+</script>
+
+/* ═════════════════════════════════════════════
+   SECTIONS / PAGE HEADERS
+   Section tag: high contrast in all situations
+════════════════════════════════════════════════ */ 
+
+:root{
+  --tag-bg: #ffffff;
+  --tag-fg: #0b1220;
+  --tag-border: rgba(11,18,32,.22);
+}
+
+.section-header .section-tag,
+.section-tag{
+  display:inline-flex;
+  align-items:center;
+  padding:.35rem .7rem;
+  border-radius: 999px;
+
+  background: var(--tag-bg) !important;
+  color: var(--tag-fg) !important;
+  border: 1px solid var(--tag-border) !important;
+
+  font-weight: 700;
+  letter-spacing: .02em;
+  line-height: 1;
+
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.7),
+    0 6px 18px rgba(0,0,0,.12);
+}
+
+/* If your site has a dark theme toggle, this auto-inverts */
+@media (prefers-color-scheme: dark){
+  :root{
+    --tag-bg: #0b1220;
+    --tag-fg: #ffffff;
+    --tag-border: rgba(255,255,255,.22);
+  }
+}
+.on-dark .section-tag{
+  background:#ffffff !important;
+  color:#0b1220 !important;
+  border-color: rgba(11,18,32,.25) !important;
 }
