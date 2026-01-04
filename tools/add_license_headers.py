@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright © 2024–2026 Faith Frontier Ecclesiastical Trust. All rights reserved.
+# PROPRIETARY — See LICENSE.
+
 """
 One-time helper to add the required proprietary header to source files.
 This is NOT a pre-commit hook. Run manually when needed.
