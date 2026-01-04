@@ -1,4 +1,4 @@
-import json, re, sys, os, hashlib
+import io, json, re, sys, os, hashlib
 from pathlib import Path
 from urllib.request import urlopen, Request
 
@@ -41,8 +41,6 @@ def snippet(text: str, max_len: int = 240) -> str:
     return t[:max_len] + ("…" if len(t) > max_len else "")
 
 if __name__ == "__main__":
-    import io
-
     if not MANIFEST.exists():
         print(f"Missing {MANIFEST}. Create cases/manifest.json first.", file=sys.stderr)
         sys.exit(2)
