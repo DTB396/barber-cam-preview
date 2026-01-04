@@ -4,6 +4,31 @@ const $meta = document.getElementById("meta");
 
 let data = [];
 
+/**
+ * Computes a relevance score for how well a text matches a query.
+ *
+ * The query is lowercased and trimmed; if it is empty after trimming,
+ * the function returns 0. The text is also lowercased (with `null`/`undefined`
+ * treated as an empty string); if the resulting text is empty, the function
+ * also returns 0.
+ *
+ * Scoring strategy:
+ * - If the entire normalized query appears as a contiguous substring of the
+ *   normalized text, a fixed bonus of 10 points is added.
+ * - The query is then split on whitespace into tokens. For each token, the
+ *   number of (potentially overlapping) occurrences in the text is counted,
+ *   and up to 20 points per token are added to the score (1 point per hit,
+ *   capped at 20 for that token).
+ *
+ * The final score is a non-negative integer; 0 indicates no match or an empty
+ * query/text, and larger values indicate a stronger match. The score is not
+ * upper-bounded in general but is constrained by the input lengths and the
+ * per-token cap.
+ *
+ * @param {string} query - The search query to match against `text`.
+ * @param {string} text - The text content to be scored against the `query`.
+ * @returns {number} A non-negative integer relevance score for the match.
+ */
 function scoreMatch(query, text) {
   if (!query) return 0;
   const q = query.toLowerCase().trim();
