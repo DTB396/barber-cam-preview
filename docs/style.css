@@ -42,7 +42,13 @@ h1 { margin: 2px 0 4px; font-size: 22px; }
   background: var(--card);
   color: var(--text);
   font-size: 16px;
-  outline: none;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+.search input:focus-visible {
+  border-color: var(--accent);
+  outline-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(106, 163, 255, 0.35);
 }
 .hint { margin-top: 8px; color: var(--muted); font-size: 12px; }
 
