@@ -1659,9 +1659,8 @@ h1, h2, h3, h4, h5, h6 {
 ════════════════════════════════════════════════ */ 
 
 :root{
-  --barber-red:  #d62828;
   --barber-white:#ffffff;
-  --barber-blue: #1d4ed8;
+  --barber-blue: #1d4ed8;      /* Same as --accent for consistency */
 
   /* Default fallback (light theme) */
   --brand-text-fallback: #0b1220;
