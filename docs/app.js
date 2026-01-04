@@ -3,6 +3,7 @@ const $results = document.getElementById("results");
 const $meta = document.getElementById("meta");
 
 let data = [];
+const MAX_SEARCH_RESULTS = 50;
 
 /**
  * Computes a relevance score for how well a text matches a query.
@@ -84,7 +85,7 @@ function render(query) {
     })
     .filter(x => q ? x.s > 0 : true)
     .sort((a,b) => b.s - a.s)
-    .slice(0, 50);
+    .slice(0, MAX_SEARCH_RESULTS);
 
   $meta.textContent = data.length
     ? `${rows.length} result(s) shown • ${data.length} document(s) indexed`
