@@ -1549,7 +1549,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Footer */
-.md-footer{
+.md-footer {
   margin-top: 4rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--border);
