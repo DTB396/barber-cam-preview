@@ -213,14 +213,7 @@ html, body{
   color: var(--text);
 }
 
-a{ color: var(--accent); }
-a:hover{ filter: brightness(1.05); }
-
 hr{ border-color: var(--border); }
-
-::selection{
-  background: var(--bg);
-}
 
 /* Surfaces */
 .card, .panel, .surface{
@@ -263,8 +256,6 @@ section[id] { scroll-margin-top: 96px; } /* adjust to your header height */
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  color: var(--ink);
-  background: var(--bg);
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -272,7 +263,7 @@ body {
 }
 
 ::selection {
-  background: var(--accent);
+  background: var(--barber-red);
   color: #fff;
 }
 
