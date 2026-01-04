@@ -132,16 +132,19 @@ function sanitizeUrl(url) {
   const trimmed = String(url).trim();
   if (!trimmed) return "#";
   
+  // Allow explicit relative paths
+  if (trimmed.startsWith("/") || trimmed.startsWith("./") || trimmed.startsWith("../")) {
+    return trimmed;
+  }
+  
+  // Only allow URLs with explicit http or https protocol
   try {
-    const parsed = new URL(trimmed, window.location.href);
+    const parsed = new URL(trimmed);
     if (parsed.protocol === "http:" || parsed.protocol === "https:") {
       return trimmed;
     }
   } catch {
-    // Invalid URL, check if it's a relative URL
-    if (trimmed.startsWith("/") || trimmed.startsWith("./") || trimmed.startsWith("../")) {
-      return trimmed;
-    }
+    // Invalid URL or relative path without explicit prefix - reject it
   }
   
   return "#";
