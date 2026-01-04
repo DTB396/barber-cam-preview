@@ -28,16 +28,23 @@
     isExpanded ? closeNav() : openNav();
   });
 
-  // Close when a nav link is clicked (anchors AND normal links)
+  // Close when clicking internal anchor links (same-page navigation)
+  // External links keep the nav open so users can navigate back if needed
   mainNav.querySelectorAll("a").forEach((link) => {
-    link.addEventListener("click", () => {
-      closeNav();
-      // Optional: return focus to toggle for accessibility
-      requestAnimationFrame(() => {
-        if (navToggle && typeof navToggle.focus === "function") {
-          navToggle.focus();
-        }
-      });
+    link.addEventListener("click", (e) => {
+      const href = link.getAttribute("href");
+      // Only close for internal anchor links (e.g., #preview, #principles)
+      // This improves UX for keyboard/screen reader users who may click wrong link
+      if (href && href.startsWith("#")) {
+        closeNav();
+        // Return focus to toggle for accessibility
+        requestAnimationFrame(() => {
+          if (navToggle && typeof navToggle.focus === "function") {
+            navToggle.focus();
+          }
+        });
+      }
+      // For external links or other navigation, keep menu open
     });
   });
 
