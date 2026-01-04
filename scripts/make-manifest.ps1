@@ -1,40 +1,55 @@
 ﻿param(
-  [Parameter(Mandatory=$true)][string]$Root,
-  [Parameter(Mandatory=$true)][string]$OutDir,
-  [string]$BaseUrl = "https://faithfrontier.org/cases"
+  [Parameter(Mandatory=$true)]
+  [string]$Root,
+
+  [Parameter(Mandatory=$true)]
+  [string]$OutFile,
+
+  [string]$BaseUrl = "https://faithfrontier.org/cases",
+
+  [string[]]$DefaultTags = @("Faith Frontier","Cases")
 )
 
+Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-if (!(Test-Path -LiteralPath $Root)) {
-  throw "Root path not found: $Root"
-}
+# Ensure output directory exists
+$outDir = Split-Path -Parent $OutFile
+if (-not (Test-Path $outDir)) { New-Item -ItemType Directory -Path $outDir | Out-Null }
 
-New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
+# Gather PDFs (skip hidden/system directories)
+$caseDirs = Get-ChildItem -Path $Root -Directory -Force |
+  Where-Object { $_.Name -notmatch '^\.' -and ($_.Attributes -band [IO.FileAttributes]::Hidden) -eq 0 }
 
-$items = Get-ChildItem -LiteralPath $Root -Directory | ForEach-Object {
-  $caseDir = $_.FullName
-  $caseId  = $_.Name
+$items = foreach ($dir in $caseDirs) {
+  $caseId = $dir.Name
 
-  Get-ChildItem -LiteralPath $caseDir -Filter *.pdf -Recurse -File | ForEach-Object {
-    $fileName = $_.Name
+  Get-ChildItem -Path $dir.FullName -Recurse -File -Filter *.pdf -Force |
+    Where-Object { ($_.Attributes -band [IO.FileAttributes]::Hidden) -eq 0 } |
+    ForEach-Object {
+      $fileName = $_.Name
 
-    [PSCustomObject]@{
-      caseId    = $caseId
-      caseTitle = $caseId
-      docId     = $fileName
-      docTitle  = $fileName
-      docType   = "document"
-      date      = ""
-      url       = ("{0}/{1}/{2}" -f $BaseUrl.TrimEnd('/'), $caseId, $fileName)
-      tags      = @("Faith Frontier","Cases")
-      text      = ""
-      snippet   = ""
+      [PSCustomObject]@{
+        caseId    = $caseId
+        caseTitle = $caseId
+        docId     = $fileName
+        docTitle  = $fileName
+        docType   = "pdf"
+        date      = ""  # optional: fill later
+        url       = ("{0}/{1}/{2}" -f $BaseUrl.TrimEnd("/"), $caseId, $fileName)
+        tags      = $DefaultTags
+        text      = ""  # later: OCR text
+        snippet   = ""  # later: excerpt
+      }
     }
-  }
 }
 
-$manifestPath = Join-Path $OutDir "manifest.json"
-$items | ConvertTo-Json -Depth 7 | Set-Content -Encoding UTF8 -LiteralPath $manifestPath
+# Stable ordering helps avoid noisy diffs
+$items = $items | Sort-Object caseId, docId
 
-Write-Host "Wrote $manifestPath with $($items.Count) PDFs"
+# Write UTF-8 WITHOUT BOM (important for some tooling)
+$json = $items | ConvertTo-Json -Depth 8
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+[System.IO.File]::WriteAllText($OutFile, $json, $utf8NoBom)
+
+Write-Host "Wrote $OutFile with $($items.Count) PDFs"
