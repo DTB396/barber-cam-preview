@@ -129,7 +129,7 @@ function escapeHtml(s) {
  * or cannot be parsed, the function returns "#" as a safe fallback.
  *
  * @param {string} url - The URL to validate and sanitize.
- * @returns {string} The original URL if safe, otherwise "#".
+ * @returns {string} The normalized URL if safe, otherwise "#".
  */
 function sanitizeUrl(url) {
   if (!url || typeof url !== 'string') {
