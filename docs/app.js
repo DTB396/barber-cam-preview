@@ -2,6 +2,10 @@ const $q = document.getElementById("q");
 const $results = document.getElementById("results");
 const $meta = document.getElementById("meta");
 
+// Scoring constants
+const PHRASE_MATCH_SCORE = 10;
+const MAX_TOKEN_HITS_SCORE = 20;
+
 let data = [];
 
 /**
@@ -39,12 +43,12 @@ function scoreMatch(query, text) {
 
   // Simple scoring: phrase > token hits
   let score = 0;
-  if (t.includes(q)) score += 10;
+  if (t.includes(q)) score += PHRASE_MATCH_SCORE;
 
   const tokens = q.split(/\s+/).filter(Boolean);
   for (const tok of tokens) {
     const hits = t.split(tok).length - 1;
-    score += Math.min(hits, 20);
+    score += Math.min(hits, MAX_TOKEN_HITS_SCORE);
   }
   return score;
 }
@@ -95,6 +99,8 @@ function render(query) {
     const ocr = item.ocrNeeded ? `<span class="badge">OCR needed</span>` : "";
     const ok = item.ok ? "" : `<span class="badge">Index error</span>`;
     const err = item.error ? `<div class="snip">Index error: ${item.error}</div>` : "";
+    const safeUrl = isValidUrl(item.url) ? item.url : "#";
+    const linkLabel = `Open PDF: ${escapeHtml(item.title || item.caseId || "Untitled")}`;
     return `
       <div class="card">
         <h3>${escapeHtml(item.title || item.caseId || "Untitled")}</h3>
@@ -108,7 +114,7 @@ function render(query) {
         ${item.snippet ? `<div class="snip">${escapeHtml(item.snippet)}</div>` : ""}
         ${err}
         <div class="actions">
-          <a class="btn primary" href="${item.url}" target="_blank" rel="noopener">Open PDF</a>
+          <a class="btn primary" href="${safeUrl}" target="_blank" rel="noopener" aria-label="${linkLabel}">Open PDF</a>
         </div>
       </div>
     `;
@@ -121,7 +127,17 @@ function escapeHtml(s) {
   }[c]));
 }
 
+function isValidUrl(url) {
+  if (!url) return false;
+  const lower = url.toLowerCase().trim();
+  return lower.startsWith("http://") || lower.startsWith("https://");
+}
+
 async function init() {
+  // Set ARIA attributes for accessibility
+  $results.setAttribute("aria-live", "polite");
+  $results.setAttribute("aria-atomic", "false");
+  
   const res = await fetch("./data/index.json", { cache: "no-store" });
   if (!res.ok) {
     throw new Error(`Failed to fetch index.json: ${res.status} ${res.statusText}`);
@@ -131,7 +147,13 @@ async function init() {
   render("");
 }
 
-$q.addEventListener("input", () => render($q.value));
+// Debounce search input for performance
+let debounceTimer;
+$q.addEventListener("input", () => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => render($q.value), 300);
+});
+
 init().catch(err => {
   $meta.textContent = "Failed to load index.json";
   $results.innerHTML = `<div class="card"><div class="snip">${escapeHtml(String(err))}</div></div>`;
