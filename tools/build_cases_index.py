@@ -14,6 +14,7 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 MANIFEST = Path("cases/manifest.json")
 INDEX_OUT = OUT_DIR / "index.json"
+MAX_SNIPPET_LENGTH = 240
 
 # Maximum snippet length for text previews
 MAX_SNIPPET_LENGTH = 240
