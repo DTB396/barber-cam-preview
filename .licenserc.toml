@@ -1,27 +1,17 @@
 # HawkEye license header checker config (v6)
 
+baseDir = "."
+strictCheck = true
+useDefaultExcludes = true
+useDefaultMapping = true
+
 # Put the header you want inserted/checked
 inlineHeader = """\
-Copyright © 2024–2026 Faith Frontier Ecclesiastical Trust. All rights reserved.
+Copyright © 2024–2026 BARBER CAM, Faith Frontier Ecclesiastical Trust. All rights reserved.
 PROPRIETARY — See LICENSE.\
 """
 
-# Be strict: files without headers fail
-strictCheck = true
-
-# Let HawkEye pick correct comment style per language/extension
-useDefaultMapping = true
-
-# Explicitly pin comment style for C/C++-family files to block comments
-[mappings]
-"**/*.c"   = "block"
-"**/*.h"   = "block"
-"**/*.cpp" = "block"
-"**/*.hpp" = "block"
-# Keep the default excludes too (good hygiene)
-useDefaultExcludes = true
-
-# What to check
+# Only scan what you care about
 includes = [
   "**/*.py",
   "**/*.js",
@@ -41,7 +31,7 @@ includes = [
   "**/*.yml"
 ]
 
-# What NOT to check
+# What NOT to check (in addition to defaults)
 excludes = [
   "**/node_modules/**",
   "**/.venv/**",
@@ -50,3 +40,30 @@ excludes = [
   "**/build/**",
   "**/.git/**"
 ]
+
+# Optional but nice: what HawkEye looks for
+keywords = ["copyright", "proprietary"]
+
+[properties]
+inceptionYear = 2024
+
+# Explicit overrides (singular table name is REQUIRED: [mapping], NOT [mappings])
+[mapping]
+py   = { lineComment = "#" }
+js   = { lineComment = "//" }
+ts   = { lineComment = "//" }
+tsx  = { lineComment = "//" }
+jsx  = { lineComment = "//" }
+go   = { lineComment = "//" }
+rs   = { lineComment = "//" }
+java = { lineComment = "//" }
+kt   = { lineComment = "//" }
+sh   = { lineComment = "#" }
+yaml = { lineComment = "#" }
+yml  = { lineComment = "#" }
+
+# C/C++ family should use block comments
+c    = { blockComment = ["/*", "*/"] }
+h    = { blockComment = ["/*", "*/"] }
+cpp  = { blockComment = ["/*", "*/"] }
+hpp  = { blockComment = ["/*", "*/"] }
