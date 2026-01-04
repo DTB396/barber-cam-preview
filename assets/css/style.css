@@ -127,22 +127,43 @@
 </script>
 
 /* ═════════════════════════════════════════════
-   ROOT
+   ROOT & THEME (AUTO: SYSTEM DEFAULT)
+   Uses prefers-color-scheme. No toggle needed.
+   DARK -> Light
 ════════════════════════════════════════════════ */
+/* Tell the browser we support both so built-in UI (forms/scrollbars) matches */
 :root {
-  /* Core Colors - Classic Barbershop */
+  color-scheme: light dark;
+
+  /* LIGHT (default) - Primary theme colors */
+  --bg: #ffffff;
+  --surface: #f6f7f9;          /* cards / panels */
+  --surface-2: #eef1f4;        /* subtle alt surface */
+  --text: #0b1220;
+  --text-muted: rgba(11,18,32,.72);
+  --border: rgba(11,18,32,.16);
+
+  --shadow: 0 10px 30px rgba(0,0,0,.10);
+
+  /* Brand / accent (tune these) */
+  --accent: #1d4ed8;
+  --accent-2: #d62828;
+
+  /* Focus ring (accessibility) */
+  --focus: 0 0 0 3px rgba(29,78,216,.35);
+
+  /* Classic Barbershop Colors - Legacy support */
   --ink: #0a0a0f;
   --ink-light: #1a1a2e;
   --muted: #6b7280;
-  --bg: #fafafa;
   --alt: #f0f0f5;
   --card: #ffffff;
   
   /* Barber Pole Accent Colors */
-  --accent: #c41e3a;           /* Classic barber red */
+  --barber-red: #c41e3a;       /* Classic barber red */
   --accent-hover: #a01830;
-  --accent-blue: #1e40af;       /* Deep blue */
-  --accent-gold: #d4a574;       /* Vintage gold */
+  --accent-blue: #1e40af;      /* Deep blue */
+  --accent-gold: #d4a574;      /* Vintage gold */
   
   /* 90s Nostalgia Gradients */
   --gradient-warm: linear-gradient(135deg, #c41e3a 0%, #ff6b6b 100%);
@@ -150,7 +171,7 @@
   --gradient-gold: linear-gradient(135deg, #d4a574 0%, #f0d9b5 100%);
   --gradient-dark: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
   
-  /* Shadows */
+  /* Shadows - Legacy support */
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.12);
@@ -168,33 +189,6 @@
   --transition-fast: 0.2s var(--ease-smooth);
   --transition-base: 0.3s var(--ease-smooth);
   --transition-slow: 0.5s var(--ease-smooth);
-}
-
-/* ═════════════════════════════════════════════
-   THEME (AUTO: SYSTEM DEFAULT)
-   Uses prefers-color-scheme. No toggle needed.
-   DARK -> Light
-════════════════════════════════════════════════ */
-/* Tell the browser we support both so built-in UI (forms/scrollbars) matches */
-:root{
-  color-scheme: light dark;
-
-  /* LIGHT (default) */
-  --bg: #ffffff;
-  --surface: #f6f7f9;          /* cards / panels */
-  --surface-2: #eef1f4;        /* subtle alt surface */
-  --text: #0b1220;
-  --text-muted: rgba(11,18,32,.72);
-  --border: rgba(11,18,32,.16);
-
-  --shadow: 0 10px 30px rgba(0,0,0,.10);
-
-  /* Brand / accent (tune these) */
-  --accent: #1d4ed8;
-  --accent-2: #d62828;
-
-  /* Focus ring (accessibility) */
-  --focus: 0 0 0 3px rgba(29,78,216,.35);
 }
 
 /* DARK (system) */
@@ -314,7 +308,7 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  color: var(--accent);
+  color: var(--barber-red);
   margin-bottom: 1rem;
   padding: 0.4rem 1rem;
   background: var(--bg);
@@ -387,7 +381,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .brand-icon {
   font-size: 1.25rem;
-  color: var(--accent);
+  color: var(--barber-red);
 }
 
 .main-nav {
@@ -411,7 +405,7 @@ h1, h2, h3, h4, h5, h6 {
   left: 0;
   width: 0;
   height: 2px;
-  background: var(--accent);
+  background: var(--barber-red);
   transition: var(--transition-base);
 }
 
@@ -486,8 +480,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-secondary:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--barber-red);
+  color: var(--barber-red);
 }
 
 .btn-ghost {
@@ -587,14 +581,14 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 100px;
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--accent);
+  color: var(--barber-red);
   margin-bottom: 2rem;
 }
 
 .badge-dot {
   width: 8px;
   height: 8px;
-  background: var(--accent);
+  background: var(--barber-red);
   border-radius: 50%;
   animation: pulse 2s ease-in-out infinite;
 }
@@ -615,7 +609,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .hero-title .accent {
-  color: var(--accent);
+  color: var(--barber-red);
 }
 
 .hero-lead {
@@ -642,7 +636,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .value-icon {
-  color: var(--accent);
+  color: var(--barber-red);
   font-size: 0.625rem;
 }
 
@@ -705,8 +699,8 @@ h1, h2, h3, h4, h5, h6 {
   inset: 0;
   background: repeating-linear-gradient(
     45deg,
-    var(--accent) 0px,
-    var(--accent) 10px,
+    var(--barber-red) 0px,
+    var(--barber-red) 10px,
     #fff 10px,
     #fff 20px,
     var(--accent-blue) 20px,
@@ -756,7 +750,7 @@ h1, h2, h3, h4, h5, h6 {
 .scroll-line {
   width: 1px;
   height: 40px;
-  background: linear-gradient(to bottom, var(--accent), transparent);
+  background: linear-gradient(to bottom, var(--barber-red), transparent);
   animation: scrollPulse 2s ease-in-out infinite;
 }
 
@@ -880,7 +874,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .placeholder-icon {
   margin-bottom: 1.5rem;
-  color: var(--accent);
+  color: var(--barber-red);
 }
 
 .preview-placeholder h3 {
@@ -950,7 +944,7 @@ h1, h2, h3, h4, h5, h6 {
   background: rgba(196, 30, 58, 0.08);
   border-radius: var(--radius-md);
   margin-bottom: 1.5rem;
-  color: var(--accent);
+  color: var(--barber-red);
 }
 
 .feature-card h4 {
@@ -1021,7 +1015,7 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   justify-content: center;
   margin-bottom: 1.5rem;
-  color: var(--accent);
+  color: var(--barber-red);
 }
 
 .principle-card h3 {
@@ -1061,7 +1055,7 @@ h1, h2, h3, h4, h5, h6 {
 .divider-icon {
   padding: 0 1.5rem;
   font-size: 1.5rem;
-  color: var(--accent);
+  color: var(--barber-red);
 }
 
 .principles-quote {
@@ -1158,13 +1152,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .timeline-item.completed .timeline-marker {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--barber-red);
+  border-color: var(--barber-red);
 }
 
 .timeline-item.active .timeline-marker {
   background: var(--bg);
-  border-color: var(--accent);
+  border-color: var(--barber-red);
   box-shadow: 0 0 0 4px rgba(196, 30, 58, 0.2);
 }
 
@@ -1228,7 +1222,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .sidebar-card .not-list li::before {
   content: '✕';
-  color: var(--accent);
+  color: var(--barber-red);
 }
 
 /* ═════════════════════════════════════════════
@@ -1273,7 +1267,7 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: center;
   background: var(--card);
   border-radius: var(--radius-sm);
-  color: var(--accent);
+  color: var(--barber-red);
   flex-shrink: 0;
   box-shadow: var(--shadow-sm);
 }
@@ -1341,7 +1335,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .connect-form input:focus,
 .connect-form select:focus {
-  border-color: var(--accent);
+  border-color: var(--barber-red);
   box-shadow: 0 0 0 4px rgba(196, 30, 58, 0.1);
 }
 
@@ -1392,7 +1386,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .footer-brand .brand-icon {
-  color: var(--accent);
+  color: var(--barber-red);
 }
 
 .footer-tagline {
@@ -1464,7 +1458,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .contact-link:hover {
-  color: var(--accent);
+  color: var(--barber-red);
 }
 
 .contact-link svg {
