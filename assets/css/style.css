@@ -130,6 +130,9 @@
    ROOT
 ════════════════════════════════════════════════ */
 :root {
+  /* Tell the browser we support both light and dark so built-in UI (forms/scrollbars) matches */
+  color-scheme: light dark;
+
   /* Core Colors - Classic Barbershop */
   --ink: #0a0a0f;
   --ink-light: #1a1a2e;
@@ -143,6 +146,7 @@
   --accent-hover: #a01830;
   --accent-blue: #1e40af;       /* Deep blue */
   --accent-gold: #d4a574;       /* Vintage gold */
+  --accent-2: #d62828;          /* Secondary accent */
   
   /* 90s Nostalgia Gradients */
   --gradient-warm: linear-gradient(135deg, #c41e3a 0%, #ff6b6b 100%);
@@ -150,11 +154,19 @@
   --gradient-gold: linear-gradient(135deg, #d4a574 0%, #f0d9b5 100%);
   --gradient-dark: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
   
+  /* Surfaces & Text */
+  --surface: #f6f7f9;          /* cards / panels */
+  --surface-2: #eef1f4;        /* subtle alt surface */
+  --text: #0b1220;
+  --text-muted: rgba(11,18,32,.72);
+  --border: rgba(11,18,32,.16);
+  
   /* Shadows */
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.12);
   --shadow-glow: 0 0 40px rgba(196, 30, 58, 0.15);
+  --shadow: 0 10px 30px rgba(0,0,0,.10);
   
   /* Spacing & Radius */
   --radius-sm: 8px;
@@ -168,33 +180,9 @@
   --transition-fast: 0.2s var(--ease-smooth);
   --transition-base: 0.3s var(--ease-smooth);
   --transition-slow: 0.5s var(--ease-smooth);
-}
-
-/* ═════════════════════════════════════════════
-   THEME (AUTO: SYSTEM DEFAULT)
-   Uses prefers-color-scheme. No toggle needed.
-   DARK -> Light
-════════════════════════════════════════════════ */
-/* Tell the browser we support both so built-in UI (forms/scrollbars) matches */
-:root{
-  color-scheme: light dark;
-
-  /* LIGHT (default) */
-  --bg: #ffffff;
-  --surface: #f6f7f9;          /* cards / panels */
-  --surface-2: #eef1f4;        /* subtle alt surface */
-  --text: #0b1220;
-  --text-muted: rgba(11,18,32,.72);
-  --border: rgba(11,18,32,.16);
-
-  --shadow: 0 10px 30px rgba(0,0,0,.10);
-
-  /* Brand / accent (tune these) */
-  --accent: #1d4ed8;
-  --accent-2: #d62828;
-
+  
   /* Focus ring (accessibility) */
-  --focus: 0 0 0 3px rgba(29,78,216,.35);
+  --focus: 0 0 0 3px rgba(196, 30, 58, 0.35);
 }
 
 /* Dark theme overrides for these tokens are defined in the main dark mode
