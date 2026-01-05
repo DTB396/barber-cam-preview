@@ -12,6 +12,7 @@
   --bg: #fafafa;
   --alt: #f0f0f5;
   --card: #ffffff;
+  --surface: #ffffff;
   
   /* Barber Pole Accent Colors */
   --accent: #c41e3a;           /* Classic barber red */
@@ -1496,7 +1497,15 @@ h1, h2, h3, h4, h5, h6 {
    MARKDOWN / DOCS PAGES
    ========================================================================== */
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+.md{
+=======
 .md {
+>>>>>>> origin/main
+=======
+.md {
+>>>>>>> origin/DTB396-patch-14
   max-width: 72ch;
   margin: 0 auto;
   padding: clamp(1.5rem, 4vw, 3rem);
@@ -1504,6 +1513,20 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Header */
+<<<<<<< HEAD
+<<<<<<< HEAD
+.md-header{
+=======
+.md-header {
+>>>>>>> origin/DTB396-patch-14
+  margin-bottom: 2.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding-bottom: 1.5rem;
+}
+
+<<<<<<< HEAD
+.md-title{
+=======
 .md-header {
   margin-bottom: 2.5rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
@@ -1511,6 +1534,10 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .md-title {
+>>>>>>> origin/main
+=======
+.md-title {
+>>>>>>> origin/DTB396-patch-14
   font-size: clamp(1.9rem, 3vw, 2.6rem);
   line-height: 1.15;
   letter-spacing: -.02em;
@@ -1519,12 +1546,28 @@ h1, h2, h3, h4, h5, h6 {
 
 .md-lead {
   font-size: 1.1rem;
+<<<<<<< HEAD
+<<<<<<< HEAD
+  color: var(--text-muted);
+=======
   color: var(--muted);
+>>>>>>> origin/main
+=======
+  color: var(--muted);
+>>>>>>> origin/DTB396-patch-14
   max-width: 60ch;
 }
 
 /* Content */
+<<<<<<< HEAD
+<<<<<<< HEAD
+.md-content h2{
+=======
 .md-content h2 {
+>>>>>>> origin/main
+=======
+.md-content h2 {
+>>>>>>> origin/DTB396-patch-14
   margin-top: 3rem;
   margin-bottom: 1rem;
   font-size: 1.6rem;
@@ -1532,22 +1575,54 @@ h1, h2, h3, h4, h5, h6 {
   padding-left: .75rem;
 }
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+.md-content h3{
+=======
 .md-content h3 {
+>>>>>>> origin/main
+=======
+.md-content h3 {
+>>>>>>> origin/DTB396-patch-14
   margin-top: 2rem;
   margin-bottom: .75rem;
   font-size: 1.25rem;
 }
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+.md-content p{
+=======
 .md-content p {
+>>>>>>> origin/main
+=======
+.md-content p {
+>>>>>>> origin/DTB396-patch-14
   margin: 1rem 0;
 }
 
 .md-content ul,
+<<<<<<< HEAD
+<<<<<<< HEAD
+.md-content ol{
+  margin: 1rem 0 1rem 1.25rem;
+}
+
+.md-content li{
+=======
 .md-content ol {
   margin: 1rem 0 1rem 1.25rem;
 }
 
 .md-content li {
+>>>>>>> origin/main
+=======
+.md-content ol {
+  margin: 1rem 0 1rem 1.25rem;
+}
+
+.md-content li {
+>>>>>>> origin/DTB396-patch-14
   margin: .4rem 0;
 }
 
@@ -1560,8 +1635,33 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .md-content pre {
+<<<<<<< HEAD
+<<<<<<< HEAD
+  background: var(--card);
+  border: 1px solid var(--border);
+=======
   background: var(--card);
   border: 1px solid rgba(0, 0, 0, 0.05);
+>>>>>>> origin/DTB396-patch-14
+  padding: 1rem;
+  overflow-x: auto;
+  border-radius: var(--radius-sm);
+}
+
+/* Footer */
+.md-footer {
+  margin-top: 4rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.md-meta {
+  font-size: .9rem;
+<<<<<<< HEAD
+  color: var(--text-muted);
+=======
+  background: var(--surface);
+  border: 1px solid var(--border);
   padding: 1rem;
   overflow-x: auto;
   border-radius: var(--radius-sm);
@@ -1577,4 +1677,135 @@ h1, h2, h3, h4, h5, h6 {
 .md-meta {
   font-size: .9rem;
   color: var(--muted);
+>>>>>>> origin/main
+=======
+  color: var(--muted);
+>>>>>>> origin/DTB396-patch-14
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+}
+
+.brand-logo {
+  display: block;
+  height: 34px;
+  width: auto;
+  /* makes SVG feel “natural” over translucent headers */
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.18));
+}
+
+@media (max-width: 480px) {
+  .brand-logo {
+    height: 30px;
+  }
+}
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
+  transform: translateY(0);
+  transition:
+    transform 220ms ease,
+    background-color 220ms ease,
+    box-shadow 220ms ease,
+    backdrop-filter 220ms ease;
+
+  background: rgba(10, 10, 15, 0.0);
+  box-shadow: none;
+}
+
+.site-header.is-scrolled {
+  background: rgba(10, 10, 15, 0.70);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+}
+
+.site-header.is-hidden {
+  transform: translateY(-100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header {
+    transition: none;
+  }
+}
+.brand {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.brand-logo {
+  height: 34px;
+  width: auto;
+  display: block;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, .18));
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  transition: transform 220ms ease, background-color 220ms ease, box-shadow 220ms ease, backdrop-filter 220ms ease;
+  background: rgba(10, 10, 15, 0.0);
+  box-shadow: none;
+}
+
+.site-header.is-scrolled {
+  background: rgba(10, 10, 15, 0.70);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+}
+
+.site-header.is-hidden {
+  transform: translateY(-100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header {
+    transition: none;
+  }
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  text-decoration: none;
+}
+
+.brand-logo {
+  height: 34px;
+  width: auto;
+  display: block;
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: rgba(10, 10, 15, 0);
+  transition: background-color 220ms ease, backdrop-filter 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+}
+
+.site-header.is-scrolled {
+  background: rgba(10, 10, 15, .70);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .22);
+}
+
+.site-header.is-hidden {
+  transform: translateY(-100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header {
+    transition: none;
+  }
 }
