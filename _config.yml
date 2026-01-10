@@ -28,6 +28,12 @@ plugins:
   - jekyll-sitemap
   - jekyll-seo-tag
 
+# Collections
+collections:
+  cases:
+    output: true
+    permalink: /cases/:name/
+
 # Excludes (keeps build clean)
 exclude:
   - README.md
