@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/BarberX.Infrastructure/BarberX.Infrastructure.csproj" />
+    <Project Path="src/BarberX.Mobile/BarberX.Mobile.csproj" />
+    <Project Path="src/BarberX.Shared/BarberX.Shared.csproj" />
+    <Project Path="src/BarberX.Web/BarberX.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/BarberX.Tests.Unit/BarberX.Tests.Unit.csproj" />
+  </Folder>
+</Solution>

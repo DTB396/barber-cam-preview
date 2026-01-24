@@ -95,12 +95,12 @@ login_manager.login_view = 'auth.login'  # Updated to use auth blueprint
 # Register enhanced authentication blueprint
 if ENHANCED_AUTH_AVAILABLE:
     app.register_blueprint(auth_bp, url_prefix='/auth')
-    print("✅ Enhanced auth routes registered at /auth/*")
+    print("[OK] Enhanced auth routes registered at /auth/*")
 
 # Register UX helper filters and context processors
 if UX_HELPERS_AVAILABLE:
     register_ux_filters(app)
-    print("✅ UX enhancement filters registered")
+    print("[OK] UX enhancement filters registered")
 
 # Configure logging
 if not app.debug:
