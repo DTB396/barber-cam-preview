@@ -2822,19 +2822,3 @@ if __name__ == '__main__':
     ))
     
     app.run(host='0.0.0.0', port=port, debug=debug)
-    📁 Logs: ./logs/barberx.log
-    
-    Features:
-    ✅ Multi-user authentication
-    ✅ Role-based access control
-    ✅ Subscription tiers (Free, Professional, Enterprise)
-    ✅ API key management
-    ✅ Audit logging
-    ✅ Database persistence
-    ✅ Professional dashboard
-    
-    Ready for production deployment!
-    Press Ctrl+C to stop the server.
-    """)
-    
-    app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
