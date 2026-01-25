@@ -22,7 +22,7 @@ import flask
 
 # Enhanced authentication imports
 try:
-    from models_auth import User, UsageTracking, ApiKey, TierLevel
+    from models_auth import User, UsageTracking, ApiKey as APIKey, TierLevel
     from auth_routes import auth_bp
     ENHANCED_AUTH_AVAILABLE = True
 except ImportError as e:
@@ -122,8 +122,8 @@ analysis_tasks = {}  # Track background analysis tasks
 # ========================================
 # DATABASE MODELS
 # ========================================
-# Note: User model is imported from models_auth.py to avoid duplicate definitions
-# Analysis, APIKey, AppSettings, PDFUpload are defined here
+# Note: User and ApiKey imported from models_auth.py
+# Analysis, AppSettings, PDFUpload, AuditLog defined here
 
 class Analysis(db.Model):
     """Analysis record for BWC video processing"""
@@ -206,36 +206,6 @@ class Analysis(db.Model):
             })
         
         return data
-
-
-class APIKey(db.Model):
-    """API key for programmatic access"""
-    __tablename__ = 'api_keys'
-    __table_args__ = {'extend_existing': True}
-    
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    
-    key = db.Column(db.String(64), unique=True, nullable=False, index=True)
-    name = db.Column(db.String(100), nullable=False)
-    
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    last_used_at = db.Column(db.DateTime)
-    is_active = db.Column(db.Boolean, default=True)
-    
-    def generate_key(self):
-        """Generate secure API key"""
-        self.key = f"bx_{uuid.uuid4().hex}{uuid.uuid4().hex[:16]}"
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'key': self.key,
-            'created_at': self.created_at.isoformat(),
-            'last_used_at': self.last_used_at.isoformat() if self.last_used_at else None,
-            'is_active': self.is_active
-        }
 
 
 class AppSettings(db.Model):
@@ -2746,3 +2716,43 @@ if __name__ == '__main__':
     ))
     
     app.run(host='0.0.0.0', port=port, debug=debug)
+
+
+# ========================================
+# RUN APPLICATION
+# ========================================
+
+if __name__ == '__main__':
+    import os
+    port = int(os.getenv('PORT', 5000))
+    debug = os.getenv('FLASK_ENV', 'production') == 'development'
+    
+    # Display startup banner
+    print("""
+    ╔════════════════════════════════════════════════════════════════╗
+    ║                                                                ║
+    ║        BarberX Legal Technologies                              ║
+    ║        Professional BWC Forensic Analysis Platform             ║
+    ║                                                                ║
+    ╚════════════════════════════════════════════════════════════════╝
+    
+    🌐 Web Application: http://localhost:{port}
+    🔐 Admin Login: admin@barberx.info
+    📊 Database: SQLite
+    Logs: ./logs/barberx.log
+    
+    Features:
+    ✅ Multi-user authentication
+    ✅ Role-based access control
+    ✅ Subscription tiers (Free, Professional, Enterprise)
+    ✅ API key management
+    ✅ Audit logging
+    ✅ Database persistence
+    ✅ Professional dashboard
+
+    Ready for production deployment!
+    Press Ctrl+C to stop the server.
+    """.format(port=port))
+    
+    app.run(host='0.0.0.0', port=port, debug=debug)
+
