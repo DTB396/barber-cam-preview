@@ -14,16 +14,34 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 import flask
-from flask import (Flask, flash, jsonify, redirect, render_template, request,
-                   send_file, session, url_for)
+from flask import Flask, flash, jsonify, redirect, render_template, request, send_file, session, url_for
 from flask_cors import CORS
-from flask_login import (LoginManager, UserMixin, current_user, login_required,
-                         login_user, logout_user)
+from flask_login import LoginManager, UserMixin, current_user, login_required, login_user, logout_user
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 from flask_compress import Compress
+
+# Security utilities
+try:
+    from utils.security import ErrorSanitizer, InputValidator
+
+    UTILS_AVAILABLE = True
+except ImportError as e:
+    UTILS_AVAILABLE = False
+    print(f"[!] Utils not available: {e}")
+
+    # Fallback ErrorSanitizer
+    class ErrorSanitizer:
+        @staticmethod
+        def create_error_ticket():
+            return "ERR-" + str(uuid.uuid4())[:8]
+
+        @staticmethod
+        def sanitize_error(error):
+            return "An error occurred. Please contact support."
+
 
 # Enhanced authentication imports
 try:
@@ -90,15 +108,25 @@ except ImportError:
 
 # Backend Optimization Components
 try:
-    from api_middleware import (api_endpoint, handle_errors, log_request,
-                                rate_limit, require_api_key, require_tier,
-                                validate_request)
-    from backend_integration import (Event, error_response, event_bus,
-                                     performance_monitor, service_registry,
-                                     success_response)
+    from api_middleware import (
+        api_endpoint,
+        handle_errors,
+        log_request,
+        rate_limit,
+        require_api_key,
+        require_tier,
+        validate_request,
+    )
+    from backend_integration import (
+        Event,
+        error_response,
+        event_bus,
+        performance_monitor,
+        service_registry,
+        success_response,
+    )
     from config_manager import ConfigManager, DatabaseBackup, DatabaseOptimizer
-    from unified_evidence_service import (EvidenceReportGenerator,
-                                          UnifiedEvidenceProcessor)
+    from unified_evidence_service import EvidenceReportGenerator, UnifiedEvidenceProcessor
 
     BACKEND_OPTIMIZATION_AVAILABLE = True
     print("[OK] Backend optimization components loaded")
@@ -116,6 +144,9 @@ except ImportError as e:
 
 # Initialize Flask app
 app = Flask(__name__)
+
+# Initialize logger for the application
+logger = logging.getLogger(__name__)
 
 # Enable compression for all responses
 compress = Compress()
@@ -142,9 +173,10 @@ else:
     # CRITICAL: SECRET_KEY must be set in environment - no hardcoded fallback
     secret_key = os.getenv("SECRET_KEY")
     if not secret_key:
-        if app.config.get('TESTING'):
+        if app.config.get("TESTING"):
             # Only allow auto-generation in testing
             import secrets
+
             secret_key = secrets.token_hex(32)
             app.logger.warning("Generated temporary SECRET_KEY for testing")
         else:
@@ -180,9 +212,7 @@ app.config["ANALYSIS_FOLDER"] = Path("./bwc_analysis")
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=7)
 
 # CORS configuration for production
-cors_origins = os.getenv(
-    "CORS_ORIGINS", "https://barberx.info,https://www.barberx.info,http://localhost:5000"
-)
+cors_origins = os.getenv("CORS_ORIGINS", "https://barberx.info,https://www.barberx.info,http://localhost:5000")
 CORS_ORIGINS_LIST = [origin.strip() for origin in cors_origins.split(",")]
 
 # Create directories
@@ -198,15 +228,15 @@ compress.init_app(app)
 csrf.init_app(app)
 
 # Exempt Stripe webhook from CSRF (it uses signature verification instead)
-csrf.exempt('stripe_payments.webhook')
+csrf.exempt("stripe_payments.webhook")
 
 CORS(app, origins=CORS_ORIGINS_LIST, supports_credentials=True)
 login_manager = LoginManager(app)
 login_manager.login_view = "auth.login"  # Updated to use auth blueprint
 
 # Configure request timeout
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000  # 1 year for static files
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 31536000  # 1 year for static files
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=7)
 
 # Register enhanced authentication blueprint
 if ENHANCED_AUTH_AVAILABLE:
@@ -241,9 +271,7 @@ if not app.debug:
     if not os.path.exists("logs"):
         os.mkdir("logs")
     file_handler = RotatingFileHandler("logs/barberx.log", maxBytes=10240000, backupCount=10)
-    file_handler.setFormatter(
-        logging.Formatter("%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]")
-    )
+    file_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]"))
     file_handler.setLevel(logging.INFO)
     app.logger.addHandler(file_handler)
     app.logger.setLevel(logging.INFO)
@@ -395,9 +423,7 @@ class AppSettings(db.Model):
     key = db.Column(db.String(100), unique=True, nullable=False, index=True)
     value = db.Column(db.Text)
     value_type = db.Column(db.String(20), default="string")  # string, int, float, bool, json
-    category = db.Column(
-        db.String(50), default="general"
-    )  # general, security, features, limits, email, branding
+    category = db.Column(db.String(50), default="general")  # general, security, features, limits, email, branding
     description = db.Column(db.String(500))
     is_editable = db.Column(db.Boolean, default=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -606,7 +632,8 @@ def index():
     except Exception as e:
         # Fallback to a simple response if template fails
         app.logger.error(f"Index route error: {e}")
-        return f"""
+        return (
+            f"""
         <html>
         <head><title>BarberX Legal Technologies</title></head>
         <body style="font-family: Arial; max-width: 800px; margin: 50px auto; padding: 20px;">
@@ -616,7 +643,9 @@ def index():
             <p style="color: red;">Error: {e}</p>
         </body>
         </html>
-        """, 500
+        """,
+            500,
+        )
 
 
 @app.route("/health")
@@ -741,19 +770,19 @@ def register():
     from utils.security import InputValidator
     from utils.responses import error_response, validation_error, success_response
     from utils.logging_config import get_logger
-    
-    logger = get_logger('auth')
+
+    logger = get_logger("auth")
 
     try:
         data = request.get_json()
 
         # Validate required fields
         validation_errors = {}
-        
+
         email = data.get("email", "").strip()
         password = data.get("password", "")
         full_name = data.get("full_name", "").strip()
-        
+
         # Email validation
         if not email:
             validation_errors["email"] = ["Email is required"]
@@ -761,7 +790,7 @@ def register():
             is_valid, error_msg = InputValidator.validate_email(email)
             if not is_valid:
                 validation_errors["email"] = [error_msg]
-        
+
         # Password validation
         if not password:
             validation_errors["password"] = ["Password is required"]
@@ -769,24 +798,20 @@ def register():
             is_valid, error_msg = InputValidator.validate_password(password)
             if not is_valid:
                 validation_errors["password"] = [error_msg]
-        
+
         # Name validation
         if not full_name:
             validation_errors["full_name"] = ["Full name is required"]
         elif len(full_name) > 100:
             validation_errors["full_name"] = ["Name too long (max 100 characters)"]
-        
+
         # Return validation errors if any
         if validation_errors:
             return validation_error(validation_errors)
 
         # Check if user exists
         if User.query.filter_by(email=email).first():
-            return error_response(
-                "This email is already registered",
-                error_code='ALREADY_EXISTS',
-                status_code=400
-            )
+            return error_response("This email is already registered", error_code="ALREADY_EXISTS", status_code=400)
 
         # Create user
         user = User(
@@ -810,23 +835,19 @@ def register():
 
         # Redirect new users to onboarding welcome screen
         return success_response(
-            data={
-                "user": user.to_dict(),
-                "redirect": "/welcome"
-            },
-            message="Registration successful",
-            status_code=201
+            data={"user": user.to_dict(), "redirect": "/welcome"}, message="Registration successful", status_code=201
         )
-    
+
     except Exception as e:
         logger.error(f"Registration failed: {type(e).__name__}: {e}", exc_info=True)
         from utils.security import ErrorSanitizer
+
         error_ticket = ErrorSanitizer.create_error_ticket()
         return error_response(
             "Registration failed. Please try again.",
-            error_code='OPERATION_FAILED',
+            error_code="OPERATION_FAILED",
             status_code=500,
-            error_ticket=error_ticket
+            error_ticket=error_ticket,
         )
 
 
@@ -891,16 +912,17 @@ def skip_onboarding():
     """Mark onboarding as complete and redirect to dashboard"""
     try:
         # Mark onboarding complete in session (database update can be added later)
-        session['onboarding_complete'] = True
-        
+        session["onboarding_complete"] = True
+
         from utils.logging_config import get_logger
-        logger = get_logger('app')
+
+        logger = get_logger("app")
         logger.info(f"User {current_user.email} skipped onboarding")
-        
-        return redirect(url_for('dashboard'))
+
+        return redirect(url_for("dashboard"))
     except Exception as e:
         app.logger.error(f"Skip onboarding error: {e}")
-        return redirect(url_for('dashboard'))
+        return redirect(url_for("dashboard"))
 
 
 @app.route("/dashboard")
@@ -923,9 +945,7 @@ def dashboard():
                 except (ValueError, TypeError):
                     return value
 
-            return render_template(
-                "auth/dashboard.html", user=current_user, usage=usage, limits=limits
-            )
+            return render_template("auth/dashboard.html", user=current_user, usage=usage, limits=limits)
         except Exception as e:
             app.logger.error(f"Dashboard error: {e}")
             # Fallback to basic dashboard
@@ -1005,8 +1025,8 @@ def change_password():
     from utils.security import InputValidator, ErrorSanitizer
     from utils.responses import error_response, validation_error, success_response
     from utils.logging_config import get_logger
-    
-    logger = get_logger('auth')
+
+    logger = get_logger("auth")
 
     try:
         data = request.get_json()
@@ -1020,11 +1040,7 @@ def change_password():
 
         # Check current password
         if not current_user.check_password(current_password):
-            return error_response(
-                "Current password is incorrect",
-                error_code='INVALID_CREDENTIALS',
-                status_code=401
-            )
+            return error_response("Current password is incorrect", error_code="INVALID_CREDENTIALS", status_code=401)
 
         # Update password
         current_user.set_password(new_password)
@@ -1033,15 +1049,12 @@ def change_password():
         logger.info(f"Password changed for user: {current_user.email}")
 
         return success_response(message="Password changed successfully")
-        
+
     except Exception as e:
         logger.error(f"Password change failed: {type(e).__name__}: {e}", exc_info=True)
         error_ticket = ErrorSanitizer.create_error_ticket()
         return error_response(
-            "Failed to change password",
-            error_code='OPERATION_FAILED',
-            status_code=500,
-            error_ticket=error_ticket
+            "Failed to change password", error_code="OPERATION_FAILED", status_code=500, error_ticket=error_ticket
         )
 
 
@@ -1094,19 +1107,18 @@ def admin_panel_old():
 
             # Optimize: Get aggregated stats without loading all users
             total_users = User.query.count()
-            total_analyses = (
-                db.session.query(func.sum(UsageTracking.bwc_videos_processed)).scalar() or 0
-            )
+            total_analyses = db.session.query(func.sum(UsageTracking.bwc_videos_processed)).scalar() or 0
             total_storage = db.session.query(func.sum(UsageTracking.storage_used_mb)).scalar() or 0
             storage_gb = round(total_storage / 1024, 2) if total_storage else 0
 
             # Calculate MRR efficiently using SQL aggregation
             from models_auth import TierLevel
+
             revenue = 0
             for tier in TierLevel:
                 tier_count = User.query.filter_by(tier=tier).count()
                 revenue += tier_count * tier.value
-            
+
             # Only get users for display (with limit)
             users = User.query.order_by(User.created_at.desc()).limit(100).all()
 
@@ -1192,13 +1204,9 @@ def download_analysis_report(analysis_id, format):
             download_name=f"{analysis.id}_report.json",
         )
     elif format == "txt" and analysis.report_txt_path:
-        return send_file(
-            analysis.report_txt_path, as_attachment=True, download_name=f"{analysis.id}_report.txt"
-        )
+        return send_file(analysis.report_txt_path, as_attachment=True, download_name=f"{analysis.id}_report.txt")
     elif format == "md" and analysis.report_md_path and os.path.exists(analysis.report_md_path):
-        return send_file(
-            analysis.report_md_path, as_attachment=True, download_name=f"{analysis.id}_report.md"
-        )
+        return send_file(analysis.report_md_path, as_attachment=True, download_name=f"{analysis.id}_report.md")
 
     return jsonify({"error": f"Report format '{format}' not available"}), 404
 
@@ -1207,9 +1215,7 @@ def download_analysis_report(analysis_id, format):
 @login_required
 def get_user_analyses():
     """Get all analyses for current user"""
-    analyses = (
-        Analysis.query.filter_by(user_id=current_user.id).order_by(Analysis.created_at.desc()).all()
-    )
+    analyses = Analysis.query.filter_by(user_id=current_user.id).order_by(Analysis.created_at.desc()).all()
 
     return jsonify(
         {
@@ -1257,27 +1263,27 @@ def evidence_intake_submit():
     from utils.security import InputValidator, ErrorSanitizer
     from utils.responses import error_response, validation_error, success_response
     from utils.logging_config import get_logger
-    
-    logger = get_logger('api')
+
+    logger = get_logger("api")
 
     try:
         # Validate required fields
         validation_errors = {}
-        
+
         case_number = request.form.get("case_number", "").strip()
         if not case_number:
             validation_errors["case_number"] = ["Case number is required"]
         elif len(case_number) > 50:
             validation_errors["case_number"] = ["Case number too long (max 50 characters)"]
-        
+
         evidence_type = request.form.get("evidence_type", "").strip()
         if not evidence_type:
             validation_errors["evidence_type"] = ["Evidence type is required"]
-        
+
         # Return validation errors if any
         if validation_errors:
             return validation_error(validation_errors)
-        
+
         # Get form data with sanitization
         data = {
             "case_number": InputValidator.sanitize_text(case_number, 50),
@@ -1301,7 +1307,7 @@ def evidence_intake_submit():
             "submitted_by": current_user.email,
             "id": str(uuid.uuid4())[:12].upper(),
         }
-        
+
         # Parse tags safely
         try:
             tags_str = request.form.get("tags", "[]")
@@ -1318,15 +1324,15 @@ def evidence_intake_submit():
                     is_valid, error_msg = InputValidator.validate_file_type(file)
                     if not is_valid:
                         logger.warning(f"File upload rejected: {error_msg}")
-                        return error_response(error_msg, error_code='FILE_TYPE_NOT_ALLOWED', status_code=400)
-                    
+                        return error_response(error_msg, error_code="FILE_TYPE_NOT_ALLOWED", status_code=400)
+
                     # Validate file size (get category from evidence type)
-                    category = 'video' if 'video' in evidence_type.lower() else 'document'
+                    category = "video" if "video" in evidence_type.lower() else "document"
                     is_valid, error_msg = InputValidator.validate_file_size(file, category)
                     if not is_valid:
                         logger.warning(f"File upload rejected: {error_msg}")
-                        return error_response(error_msg, error_code='FILE_TOO_LARGE', status_code=400)
-                    
+                        return error_response(error_msg, error_code="FILE_TOO_LARGE", status_code=400)
+
                     # Sanitize filename and save securely
                     filename = secure_filename(file.filename)
                     timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
@@ -1335,13 +1341,13 @@ def evidence_intake_submit():
                     # Save file with secure path
                     upload_dir = Path(app.config.get("UPLOAD_FOLDER", "./uploads/evidence"))
                     upload_dir.mkdir(parents=True, exist_ok=True)
-                    
+
                     try:
                         filepath = InputValidator.sanitize_path(str(upload_dir), unique_filename)
                     except ValueError as e:
                         logger.error(f"Path traversal attempt detected: {e}")
-                        return error_response("Invalid file path", error_code='VALIDATION_ERROR', status_code=400)
-                    
+                        return error_response("Invalid file path", error_code="VALIDATION_ERROR", status_code=400)
+
                     file.save(filepath)
                     logger.info(f"File saved: {filepath}")
 
@@ -1356,8 +1362,10 @@ def evidence_intake_submit():
                     data["file_size"] = os.path.getsize(filepath)
                     data["file_hash"] = file_hash.hexdigest()
                     data["format"] = filename.split(".")[-1].lower()
-                    
-                    logger.info(f"File validated and saved: {filename}, size: {data['file_size']}, hash: {data['file_hash'][:16]}...")
+
+                    logger.info(
+                        f"File validated and saved: {filename}, size: {data['file_size']}, hash: {data['file_hash'][:16]}..."
+                    )
 
         # Create evidence package
         evidence_package = evidence_workflow.processor.create_evidence_package(data)
@@ -1382,38 +1390,28 @@ def evidence_intake_submit():
 
         # Save evidence package metadata
         metadata_path = (
-            Path(app.config.get("ANALYSIS_FOLDER", "./bwc_analysis"))
-            / analysis.id
-            / "evidence_package.json"
+            Path(app.config.get("ANALYSIS_FOLDER", "./bwc_analysis")) / analysis.id / "evidence_package.json"
         )
         metadata_path.parent.mkdir(parents=True, exist_ok=True)
         with open(metadata_path, "w") as f:
             json.dump(evidence_package, f, indent=2)
 
         return success_response(
-            data={
-                "evidence_id": analysis.id,
-                "case_number": data["case_number"]
-            },
+            data={"evidence_id": analysis.id, "case_number": data["case_number"]},
             message="Evidence submitted successfully",
-            status_code=201
+            status_code=201,
         )
 
     except Exception as e:
         # Log full error server-side
         logger.error(f"Evidence intake failed: {type(e).__name__}: {e}", exc_info=True)
-        
+
         # Generate error ticket for support
         error_ticket = ErrorSanitizer.create_error_ticket()
-        
+
         # Return sanitized error to user
-        user_message = ErrorSanitizer.sanitize_error(e, 'file')
-        return error_response(
-            user_message,
-            error_code='OPERATION_FAILED',
-            status_code=500,
-            error_ticket=error_ticket
-        )
+        user_message = ErrorSanitizer.sanitize_error(e, "file")
+        return error_response(user_message, error_code="OPERATION_FAILED", status_code=500, error_ticket=error_ticket)
 
 
 @app.route("/api/evidence/list", methods=["GET"])
@@ -1421,10 +1419,10 @@ def evidence_intake_submit():
 def list_evidence():
     """List all evidence items for current user with pagination"""
     # Add pagination
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 20, type=int)
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 20, type=int)
     per_page = min(per_page, 100)  # Cap at 100
-    
+
     analyses_query = Analysis.query.filter_by(user_id=current_user.id).order_by(Analysis.created_at.desc())
     analyses = analyses_query.limit(per_page).offset((page - 1) * per_page).all()
 
@@ -1432,9 +1430,7 @@ def list_evidence():
     for analysis in analyses:
         # Load evidence package if exists
         metadata_path = (
-            Path(app.config.get("ANALYSIS_FOLDER", "./bwc_analysis"))
-            / analysis.id
-            / "evidence_package.json"
+            Path(app.config.get("ANALYSIS_FOLDER", "./bwc_analysis")) / analysis.id / "evidence_package.json"
         )
 
         if metadata_path.exists():
@@ -1577,10 +1573,10 @@ def scan_violations():
         logger.error(f"{request.path} failed: {type(e).__name__}: {e}", exc_info=True)
         error_ticket = ErrorSanitizer.create_error_ticket()
         return error_response(
-            ErrorSanitizer.sanitize_error(e, 'default'),
-            error_code='OPERATION_FAILED',
+            ErrorSanitizer.sanitize_error(e, "default"),
+            error_code="OPERATION_FAILED",
             status_code=500,
-            error_ticket=error_ticket
+            error_ticket=error_ticket,
         )
 
 
@@ -1609,10 +1605,10 @@ def check_compliance():
         logger.error(f"{request.path} failed: {type(e).__name__}: {e}", exc_info=True)
         error_ticket = ErrorSanitizer.create_error_ticket()
         return error_response(
-            ErrorSanitizer.sanitize_error(e, 'default'),
-            error_code='OPERATION_FAILED',
+            ErrorSanitizer.sanitize_error(e, "default"),
+            error_code="OPERATION_FAILED",
             status_code=500,
-            error_ticket=error_ticket
+            error_ticket=error_ticket,
         )
 
 
@@ -1641,8 +1637,7 @@ def combined_legal_analysis():
             "violations": violation_results,
             "compliance": compliance_results,
             "overall_assessment": {
-                "total_issues": violation_results["total_violations"]
-                + compliance_results["total_issues"],
+                "total_issues": violation_results["total_violations"] + compliance_results["total_issues"],
                 "critical_violations": len(violation_results.get("critical_violations", [])),
                 "non_compliant_count": compliance_results["issues_by_status"]["non_compliant"],
                 "recommended_actions": violation_results.get("recommended_motions", [])
@@ -1658,10 +1653,10 @@ def combined_legal_analysis():
         logger.error(f"{request.path} failed: {type(e).__name__}: {e}", exc_info=True)
         error_ticket = ErrorSanitizer.create_error_ticket()
         return error_response(
-            ErrorSanitizer.sanitize_error(e, 'default'),
-            error_code='OPERATION_FAILED',
+            ErrorSanitizer.sanitize_error(e, "default"),
+            error_code="OPERATION_FAILED",
             status_code=500,
-            error_ticket=error_ticket
+            error_ticket=error_ticket,
         )
 
 
@@ -1717,10 +1712,10 @@ def transcribe_audio():
         logger.error(f"{request.path} failed: {type(e).__name__}: {e}", exc_info=True)
         error_ticket = ErrorSanitizer.create_error_ticket()
         return error_response(
-            ErrorSanitizer.sanitize_error(e, 'default'),
-            error_code='OPERATION_FAILED',
+            ErrorSanitizer.sanitize_error(e, "default"),
+            error_code="OPERATION_FAILED",
             status_code=500,
-            error_ticket=error_ticket
+            error_ticket=error_ticket,
         )
 
 
@@ -1769,10 +1764,10 @@ def extract_text_ocr():
         logger.error(f"{request.path} failed: {type(e).__name__}: {e}", exc_info=True)
         error_ticket = ErrorSanitizer.create_error_ticket()
         return error_response(
-            ErrorSanitizer.sanitize_error(e, 'default'),
-            error_code='OPERATION_FAILED',
+            ErrorSanitizer.sanitize_error(e, "default"),
+            error_code="OPERATION_FAILED",
             status_code=500,
-            error_ticket=error_ticket
+            error_ticket=error_ticket,
         )
 
 
@@ -1818,10 +1813,10 @@ def setup_two_factor():
         logger.error(f"{request.path} failed: {type(e).__name__}: {e}", exc_info=True)
         error_ticket = ErrorSanitizer.create_error_ticket()
         return error_response(
-            ErrorSanitizer.sanitize_error(e, 'default'),
-            error_code='OPERATION_FAILED',
+            ErrorSanitizer.sanitize_error(e, "default"),
+            error_code="OPERATION_FAILED",
             status_code=500,
-            error_ticket=error_ticket
+            error_ticket=error_ticket,
         )
 
 
@@ -1855,10 +1850,10 @@ def verify_two_factor():
         logger.error(f"{request.path} failed: {type(e).__name__}: {e}", exc_info=True)
         error_ticket = ErrorSanitizer.create_error_ticket()
         return error_response(
-            ErrorSanitizer.sanitize_error(e, 'default'),
-            error_code='OPERATION_FAILED',
+            ErrorSanitizer.sanitize_error(e, "default"),
+            error_code="OPERATION_FAILED",
             status_code=500,
-            error_ticket=error_ticket
+            error_ticket=error_ticket,
         )
 
 
@@ -1931,9 +1926,7 @@ def create_checkout_session():
             trial_days=14,
         )
 
-        return jsonify(
-            {"success": True, "checkout_url": session["url"], "session_id": session["session_id"]}
-        )
+        return jsonify({"success": True, "checkout_url": session["url"], "session_id": session["session_id"]})
 
     except Exception as e:
         app.logger.error(f"Checkout creation error: {str(e)}")
@@ -1941,10 +1934,10 @@ def create_checkout_session():
         logger.error(f"{request.path} failed: {type(e).__name__}: {e}", exc_info=True)
         error_ticket = ErrorSanitizer.create_error_ticket()
         return error_response(
-            ErrorSanitizer.sanitize_error(e, 'default'),
-            error_code='OPERATION_FAILED',
+            ErrorSanitizer.sanitize_error(e, "default"),
+            error_code="OPERATION_FAILED",
             status_code=500,
-            error_ticket=error_ticket
+            error_ticket=error_ticket,
         )
 
 
@@ -1982,10 +1975,10 @@ def stripe_webhook():
         logger.error(f"{request.path} failed: {type(e).__name__}: {e}", exc_info=True)
         error_ticket = ErrorSanitizer.create_error_ticket()
         return error_response(
-            ErrorSanitizer.sanitize_error(e, 'validation'),
-            error_code='OPERATION_FAILED',
+            ErrorSanitizer.sanitize_error(e, "validation"),
+            error_code="OPERATION_FAILED",
             status_code=400,
-            error_ticket=error_ticket
+            error_ticket=error_ticket,
         )
 
 
@@ -2046,9 +2039,7 @@ def deploy_agent():
     config = data.get("config", {})
 
     try:
-        agent_id = agent_manager.deploy_agent(
-            agent_type=agent_type, user_id=str(current_user.id), config=config
-        )
+        agent_id = agent_manager.deploy_agent(agent_type=agent_type, user_id=str(current_user.id), config=config)
 
         return jsonify({"agent_id": agent_id, "message": "Agent deployed successfully"})
     except Exception as e:
@@ -2057,10 +2048,10 @@ def deploy_agent():
         logger.error(f"{request.path} failed: {type(e).__name__}: {e}", exc_info=True)
         error_ticket = ErrorSanitizer.create_error_ticket()
         return error_response(
-            ErrorSanitizer.sanitize_error(e, 'validation'),
-            error_code='OPERATION_FAILED',
+            ErrorSanitizer.sanitize_error(e, "validation"),
+            error_code="OPERATION_FAILED",
             status_code=400,
-            error_ticket=error_ticket
+            error_ticket=error_ticket,
         )
 
 
@@ -2079,10 +2070,10 @@ def list_agents():
         logger.error(f"{request.path} failed: {type(e).__name__}: {e}", exc_info=True)
         error_ticket = ErrorSanitizer.create_error_ticket()
         return error_response(
-            ErrorSanitizer.sanitize_error(e, 'validation'),
-            error_code='OPERATION_FAILED',
+            ErrorSanitizer.sanitize_error(e, "validation"),
+            error_code="OPERATION_FAILED",
             status_code=400,
-            error_ticket=error_ticket
+            error_ticket=error_ticket,
         )
 
 
@@ -2104,10 +2095,10 @@ def execute_agent(agent_id):
         logger.error(f"{request.path} failed: {type(e).__name__}: {e}", exc_info=True)
         error_ticket = ErrorSanitizer.create_error_ticket()
         return error_response(
-            ErrorSanitizer.sanitize_error(e, 'validation'),
-            error_code='OPERATION_FAILED',
+            ErrorSanitizer.sanitize_error(e, "validation"),
+            error_code="OPERATION_FAILED",
             status_code=400,
-            error_ticket=error_ticket
+            error_ticket=error_ticket,
         )
 
 
@@ -2148,10 +2139,10 @@ def analyze_pdf_discovery():
         logger.error(f"{request.path} failed: {type(e).__name__}: {e}", exc_info=True)
         error_ticket = ErrorSanitizer.create_error_ticket()
         return error_response(
-            ErrorSanitizer.sanitize_error(e, 'default'),
-            error_code='OPERATION_FAILED',
+            ErrorSanitizer.sanitize_error(e, "default"),
+            error_code="OPERATION_FAILED",
             status_code=500,
-            error_ticket=error_ticket
+            error_ticket=error_ticket,
         )
 
 
@@ -2170,10 +2161,10 @@ def get_agent_status(agent_id):
         logger.error(f"{request.path} failed: {type(e).__name__}: {e}", exc_info=True)
         error_ticket = ErrorSanitizer.create_error_ticket()
         return error_response(
-            ErrorSanitizer.sanitize_error(e, 'database'),
-            error_code='OPERATION_FAILED',
+            ErrorSanitizer.sanitize_error(e, "database"),
+            error_code="OPERATION_FAILED",
             status_code=404,
-            error_ticket=error_ticket
+            error_ticket=error_ticket,
         )
 
 
@@ -2192,10 +2183,10 @@ def delete_agent(agent_id):
         logger.error(f"{request.path} failed: {type(e).__name__}: {e}", exc_info=True)
         error_ticket = ErrorSanitizer.create_error_ticket()
         return error_response(
-            ErrorSanitizer.sanitize_error(e, 'validation'),
-            error_code='OPERATION_FAILED',
+            ErrorSanitizer.sanitize_error(e, "validation"),
+            error_code="OPERATION_FAILED",
             status_code=400,
-            error_ticket=error_ticket
+            error_ticket=error_ticket,
         )
 
 
@@ -2224,10 +2215,10 @@ def process_evidence_workflow():
         logger.error(f"{request.path} failed: {type(e).__name__}: {e}", exc_info=True)
         error_ticket = ErrorSanitizer.create_error_ticket()
         return error_response(
-            ErrorSanitizer.sanitize_error(e, 'validation'),
-            error_code='OPERATION_FAILED',
+            ErrorSanitizer.sanitize_error(e, "validation"),
+            error_code="OPERATION_FAILED",
             status_code=400,
-            error_ticket=error_ticket
+            error_ticket=error_ticket,
         )
 
 
@@ -2252,10 +2243,10 @@ def workflow_chat():
         logger.error(f"{request.path} failed: {type(e).__name__}: {e}", exc_info=True)
         error_ticket = ErrorSanitizer.create_error_ticket()
         return error_response(
-            ErrorSanitizer.sanitize_error(e, 'validation'),
-            error_code='OPERATION_FAILED',
+            ErrorSanitizer.sanitize_error(e, "validation"),
+            error_code="OPERATION_FAILED",
             status_code=400,
-            error_ticket=error_ticket
+            error_ticket=error_ticket,
         )
 
 
@@ -2272,9 +2263,7 @@ def workflow_generate_document():
         custom_inputs = data.get("custom_inputs", {})
 
         orchestrator = get_orchestrator(current_user.id)
-        result = orchestrator.generate_document_from_analysis(
-            workflow_id, document_type, custom_inputs
-        )
+        result = orchestrator.generate_document_from_analysis(workflow_id, document_type, custom_inputs)
 
         return jsonify(result)
     except Exception as e:
@@ -2283,10 +2272,10 @@ def workflow_generate_document():
         logger.error(f"{request.path} failed: {type(e).__name__}: {e}", exc_info=True)
         error_ticket = ErrorSanitizer.create_error_ticket()
         return error_response(
-            ErrorSanitizer.sanitize_error(e, 'validation'),
-            error_code='OPERATION_FAILED',
+            ErrorSanitizer.sanitize_error(e, "validation"),
+            error_code="OPERATION_FAILED",
             status_code=400,
-            error_ticket=error_ticket
+            error_ticket=error_ticket,
         )
 
 
@@ -2323,10 +2312,10 @@ def workflow_scan_document():
         logger.error(f"{request.path} failed: {type(e).__name__}: {e}", exc_info=True)
         error_ticket = ErrorSanitizer.create_error_ticket()
         return error_response(
-            ErrorSanitizer.sanitize_error(e, 'validation'),
-            error_code='OPERATION_FAILED',
+            ErrorSanitizer.sanitize_error(e, "validation"),
+            error_code="OPERATION_FAILED",
             status_code=400,
-            error_ticket=error_ticket
+            error_ticket=error_ticket,
         )
 
 
@@ -2701,9 +2690,7 @@ def batch_upload_pdf():
             app.logger.info(f"PDF uploaded (batch): {original_filename} (ID: {pdf_upload.id})")
 
         except Exception as e:
-            results["failed"].append(
-                {"filename": file.filename if file else "unknown", "error": str(e)}
-            )
+            results["failed"].append({"filename": file.filename if file else "unknown", "error": str(e)})
             app.logger.error(f"Batch PDF upload error: {str(e)}")
 
     # Log audit for batch
@@ -2748,9 +2735,7 @@ def list_pdfs():
         # Public access - only show public PDFs
         query = query.filter_by(is_public=True)
 
-    pagination = query.order_by(PDFUpload.created_at.desc()).paginate(
-        page=page, per_page=per_page, error_out=False
-    )
+    pagination = query.order_by(PDFUpload.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
 
     return jsonify(
         {
@@ -2773,8 +2758,7 @@ def get_pdf_info(pdf_id):
 
     # Check access
     if not pdf.is_public and (
-        not current_user.is_authenticated
-        or (current_user.id != pdf.user_id and current_user.role != "admin")
+        not current_user.is_authenticated or (current_user.id != pdf.user_id and current_user.role != "admin")
     ):
         return jsonify({"error": "Access denied"}), 403
 
@@ -2791,8 +2775,7 @@ def download_pdf(pdf_id):
 
     # Check access
     if not pdf.is_public and (
-        not current_user.is_authenticated
-        or (current_user.id != pdf.user_id and current_user.role != "admin")
+        not current_user.is_authenticated or (current_user.id != pdf.user_id and current_user.role != "admin")
     ):
         return jsonify({"error": "Access denied"}), 403
 
@@ -2884,9 +2867,7 @@ def analyze_video():
 
             # Save reports
             output_dir = app.config["ANALYSIS_FOLDER"] / analysis.id
-            output_files = analyzer.export_report(
-                report, output_dir=str(output_dir), formats=["json", "txt", "md"]
-            )
+            output_files = analyzer.export_report(report, output_dir=str(output_dir), formats=["json", "txt", "md"])
 
             # Update analysis record
             analysis.status = "completed"
@@ -2897,9 +2878,7 @@ def analyze_video():
             analysis.total_speakers = len(report.speakers)
             analysis.total_segments = len(report.transcript)
             analysis.total_discrepancies = len(report.discrepancies)
-            analysis.critical_discrepancies = len(
-                [d for d in report.discrepancies if d.severity == "critical"]
-            )
+            analysis.critical_discrepancies = len([d for d in report.discrepancies if d.severity == "critical"])
             analysis.report_json_path = str(output_dir / "report.json")
             analysis.report_txt_path = str(output_dir / "report.txt")
             analysis.report_md_path = str(output_dir / "report.md")
@@ -3064,8 +3043,7 @@ def export_analysis_report(analysis, format):
             from reportlab.lib import colors
             from reportlab.lib.pagesizes import letter
             from reportlab.lib.styles import getSampleStyleSheet
-            from reportlab.platypus import (Paragraph, SimpleDocTemplate,
-                                            Spacer, Table, TableStyle)
+            from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
             pdf_path = output_dir / f"report_{analysis.id}.pdf"
             doc = SimpleDocTemplate(str(pdf_path), pagesize=letter)
@@ -3126,17 +3104,9 @@ def export_analysis_report(analysis, format):
 
             # Chain of Custody
             story.append(Paragraph("<b>Chain of Custody</b>", styles["Heading2"]))
-            story.append(
-                Paragraph(f"File Integrity (SHA-256): {analysis.file_hash}", styles["Normal"])
-            )
-            story.append(
-                Paragraph(
-                    f"Acquired By: {analysis.acquired_by or 'Not specified'}", styles["Normal"]
-                )
-            )
-            story.append(
-                Paragraph(f"Source: {analysis.source or 'Not specified'}", styles["Normal"])
-            )
+            story.append(Paragraph(f"File Integrity (SHA-256): {analysis.file_hash}", styles["Normal"]))
+            story.append(Paragraph(f"Acquired By: {analysis.acquired_by or 'Not specified'}", styles["Normal"]))
+            story.append(Paragraph(f"Source: {analysis.source or 'Not specified'}", styles["Normal"]))
 
             doc.build(story)
 
@@ -3294,13 +3264,9 @@ def export_analysis_report(analysis, format):
             txt_path = output_dir / f"report_{analysis.id}.txt"
 
             duration_str = (
-                f"{int(analysis.duration // 60)}m {int(analysis.duration % 60)}s"
-                if analysis.duration
-                else "N/A"
+                f"{int(analysis.duration // 60)}m {int(analysis.duration % 60)}s" if analysis.duration else "N/A"
             )
-            file_size_str = (
-                f"{analysis.file_size / (1024*1024):.2f} MB" if analysis.file_size else "N/A"
-            )
+            file_size_str = f"{analysis.file_size / (1024*1024):.2f} MB" if analysis.file_size else "N/A"
 
             text_content = f"""
 ========================================
@@ -3376,13 +3342,9 @@ For official use only - Confidential
             md_path = output_dir / f"report_{analysis.id}.md"
 
             duration_str = (
-                f"{int(analysis.duration // 60)}m {int(analysis.duration % 60)}s"
-                if analysis.duration
-                else "N/A"
+                f"{int(analysis.duration // 60)}m {int(analysis.duration % 60)}s" if analysis.duration else "N/A"
             )
-            file_size_str = (
-                f"{analysis.file_size / (1024*1024):.2f} MB" if analysis.file_size else "N/A"
-            )
+            file_size_str = f"{analysis.file_size / (1024*1024):.2f} MB" if analysis.file_size else "N/A"
 
             markdown_content = f"""# BWC FORENSIC ANALYSIS REPORT
 
@@ -3593,9 +3555,7 @@ def dashboard_stats():
     # Get daily activity for last 7 days
     seven_days_ago = now - timedelta(days=7)
     daily_activity = (
-        db.session.query(
-            func.date(Analysis.created_at).label("date"), func.count(Analysis.id).label("count")
-        )
+        db.session.query(func.date(Analysis.created_at).label("date"), func.count(Analysis.id).label("count"))
         .filter(Analysis.user_id == current_user.id, Analysis.created_at >= seven_days_ago)
         .group_by(func.date(Analysis.created_at))
         .all()
@@ -3704,12 +3664,7 @@ def list_audit_logs():
     """List user's audit logs"""
     limit = request.args.get("limit", 50, type=int)
 
-    logs = (
-        AuditLog.query.filter_by(user_id=current_user.id)
-        .order_by(AuditLog.created_at.desc())
-        .limit(limit)
-        .all()
-    )
+    logs = AuditLog.query.filter_by(user_id=current_user.id).order_by(AuditLog.created_at.desc()).limit(limit).all()
 
     return jsonify(
         {
@@ -3743,20 +3698,15 @@ def admin_list_users():
         return jsonify({"error": "Admin access required"}), 403
 
     # Add pagination
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 50, type=int)
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 50, type=int)
     per_page = min(per_page, 100)  # Cap at 100
-    
+
     users_query = User.query.order_by(User.created_at.desc())
     total = users_query.count()
     users = users_query.limit(per_page).offset((page - 1) * per_page).all()
-    
-    return jsonify({
-        "total": total,
-        "page": page,
-        "per_page": per_page,
-        "users": [u.to_dict() for u in users]
-    })
+
+    return jsonify({"total": total, "page": page, "per_page": per_page, "users": [u.to_dict() for u in users]})
 
 
 @app.route("/admin/users/<int:user_id>", methods=["GET", "PUT", "DELETE"])
@@ -3928,9 +3878,7 @@ def admin_delete_analysis(analysis_id):
     db.session.commit()
 
     # Log audit
-    AuditLog.log(
-        "admin_analysis_deleted", "analysis", analysis_id, {"deleted_by": current_user.email}
-    )
+    AuditLog.log("admin_analysis_deleted", "analysis", analysis_id, {"deleted_by": current_user.email})
 
     return jsonify({"message": "Analysis deleted successfully"})
 
@@ -3949,27 +3897,24 @@ def admin_stats():
     # Use single queries with aggregation instead of multiple count queries
     total_users = User.query.count()
     total_analyses = Analysis.query.count()
-    
+
     # Get status counts in a single query
-    status_counts = dict(
-        db.session.query(Analysis.status, func.count(Analysis.id))
-        .group_by(Analysis.status)
-        .all()
-    )
+    status_counts = dict(db.session.query(Analysis.status, func.count(Analysis.id)).group_by(Analysis.status).all())
     completed_analyses = status_counts.get("completed", 0)
     analyzing = status_counts.get("analyzing", 0)
     failed = status_counts.get("failed", 0)
 
     # Get subscription tier counts in a single query
     from models_auth import TierLevel
+
     tier_counts = {}
-    if hasattr(User, 'tier'):
+    if hasattr(User, "tier"):
         tier_result = db.session.query(User.tier, func.count(User.id)).group_by(User.tier).all()
-        tier_counts = {tier.name if hasattr(tier, 'name') else str(tier): count for tier, count in tier_result}
-    
-    free_users = tier_counts.get('FREE', 0)
-    pro_users = tier_counts.get('PROFESSIONAL', 0)
-    enterprise_users = tier_counts.get('ENTERPRISE', 0)
+        tier_counts = {tier.name if hasattr(tier, "name") else str(tier): count for tier, count in tier_result}
+
+    free_users = tier_counts.get("FREE", 0)
+    pro_users = tier_counts.get("PROFESSIONAL", 0)
+    enterprise_users = tier_counts.get("ENTERPRISE", 0)
 
     # Storage stats
     total_storage = db.session.query(func.sum(User.storage_used_mb)).scalar() or 0
@@ -3981,9 +3926,7 @@ def admin_stats():
     # Daily activity for last 7 days (optimized with group by)
     seven_days_ago = datetime.utcnow() - timedelta(days=7)
     daily_analyses = (
-        db.session.query(
-            func.date(Analysis.created_at).label("date"), func.count(Analysis.id).label("count")
-        )
+        db.session.query(func.date(Analysis.created_at).label("date"), func.count(Analysis.id).label("count"))
         .filter(Analysis.created_at >= seven_days_ago)
         .group_by(func.date(Analysis.created_at))
         .all()
@@ -4005,9 +3948,7 @@ def admin_stats():
             "completed_analyses": completed_analyses,
             "analyzing_count": analyzing,
             "failed_count": failed,
-            "success_rate": (
-                (completed_analyses / total_analyses * 100) if total_analyses > 0 else 0
-            ),
+            "success_rate": ((completed_analyses / total_analyses * 100) if total_analyses > 0 else 0),
             "subscription_breakdown": {
                 "free": free_users,
                 "professional": pro_users,
@@ -4113,7 +4054,7 @@ try:
     with app.app_context():
         db.create_all()
         app.logger.info("Database tables initialized")
-        
+
         # Initialize backend optimization services (indexes, evidence processor)
         initialize_backend_services()
 
@@ -4122,6 +4063,7 @@ try:
 except Exception as e:
     print(f"[CRITICAL] Failed to initialize app: {e}")
     import traceback
+
     traceback.print_exc()
     # Don't crash - let app start but log the error
     app.logger.error(f"Initialization error: {e}")
@@ -4515,9 +4457,7 @@ def admin_initialize_settings():
 
     db.session.commit()
 
-    AuditLog.log(
-        "settings_initialize", "AppSettings", None, {"created": created, "skipped": skipped}
-    )
+    AuditLog.log("settings_initialize", "AppSettings", None, {"created": created, "skipped": skipped})
 
     return jsonify(
         {
@@ -4549,6 +4489,7 @@ import shutil
 import tempfile
 
 from flask_login import login_required
+
 # PDF extraction
 from pypdf import PdfReader
 
@@ -4568,9 +4509,7 @@ def upload_pdf_secure():
     with open(save_path, "rb") as f:
         reader = PdfReader(f)
         text = "\n".join(page.extract_text() or "" for page in reader.pages)
-    return jsonify(
-        {"message": "PDF uploaded", "filename": str(save_path.name), "text": text[:10000]}
-    )
+    return jsonify({"message": "PDF uploaded", "filename": str(save_path.name), "text": text[:10000]})
 
 
 @app.route("/api/upload/video", methods=["POST"])
@@ -4619,9 +4558,7 @@ def upload_video():
     # Get optional metadata from form
     analysis.case_number = request.form.get("case_number", "")
     analysis.evidence_number = request.form.get("evidence_number", "")
-    analysis.acquired_by = request.form.get(
-        "acquired_by", current_user.full_name or current_user.email
-    )
+    analysis.acquired_by = request.form.get("acquired_by", current_user.full_name or current_user.email)
     analysis.source = request.form.get("source", "Web Upload")
 
     db.session.add(analysis)
@@ -4691,9 +4628,7 @@ def upload_video():
                     f.write(f"TRANSCRIPT\n")
                     f.write(f"{'-' * 60}\n\n")
                     for segment in mock_report["transcript"]["segments"]:
-                        f.write(
-                            f"[{segment['start_time']:.2f}s] {segment['speaker_label']}: {segment['text']}\n"
-                        )
+                        f.write(f"[{segment['start_time']:.2f}s] {segment['speaker_label']}: {segment['text']}\n")
 
                 # Update analysis record
                 analysis.status = "completed"
@@ -4704,9 +4639,7 @@ def upload_video():
                 analysis.total_speakers = len(mock_report["transcript"]["speakers"])
                 analysis.total_segments = len(mock_report["transcript"]["segments"])
                 analysis.total_discrepancies = len(mock_report["discrepancies"]["items"])
-                analysis.critical_discrepancies = mock_report["discrepancies"]["by_severity"][
-                    "high"
-                ]
+                analysis.critical_discrepancies = mock_report["discrepancies"]["by_severity"]["high"]
                 analysis.report_json_path = str(json_path)
                 analysis.report_txt_path = str(txt_path)
                 analysis.report_md_path = str(output_dir / "report.md")
