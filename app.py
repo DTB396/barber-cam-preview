@@ -4149,7 +4149,7 @@ import shutil
 import tempfile
 
 # PDF extraction
-import PyPDF2
+from pypdf import PdfReader
 from flask_login import login_required
 
 
@@ -4166,7 +4166,7 @@ def upload_pdf_secure():
     file.save(save_path)
     # Extract text for chat context
     with open(save_path, "rb") as f:
-        reader = PyPDF2.PdfReader(f)
+        reader = PdfReader(f)
         text = "\n".join(page.extract_text() or "" for page in reader.pages)
     return jsonify(
         {"message": "PDF uploaded", "filename": str(save_path.name), "text": text[:10000]}
