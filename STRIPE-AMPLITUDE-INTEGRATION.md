@@ -112,13 +112,13 @@ Return 200 OK
 
 ---
 
-## 📊 YOUR STRIPE KEYS (INTEGRATED)
+## 📊 YOUR STRIPE KEYS (TO BE CONFIGURED)
 
-**✅ Publishable Key:** `pk_test_51RjUMaHGgvJKMFG1...` (Added to templates)  
-**✅ Secret Key:** `sk_test_51RjUMaHGgvJKMFG1...` (Environment variable)  
-**⏳ Webhook Secret:** Not created yet (see setup below)
+**Publishable Key:** Add to Render environment: `STRIPE_PUBLISHABLE_KEY`  
+**Secret Key:** Add to Render environment: `STRIPE_SECRET_KEY`  
+**Webhook Secret:** Add to Render environment (after creating webhook): `STRIPE_WEBHOOK_SECRET`
 
-**✅ Amplitude Key:** `aa9af8f6da8b9dc451fb38893f5a33da` (Environment variable)
+**Amplitude Key:** Add to Render environment: `AMPLITUDE_API_KEY`
 
 ---
 
@@ -129,12 +129,12 @@ Return 200 OK
 1. Go to: https://dashboard.render.com/
 2. Select your web service
 3. Click "Environment" tab
-4. Add these variables:
+4. Add these variables (get values from user-provided credentials):
 
 ```bash
-STRIPE_SECRET_KEY=sk_test_51RjUMaHGgvJKMFG1HYiVQVk7vxNQRI8CiPBEt7XP2Fx7zYoP8fiCyU80PeUxo2fOk1FbDCCM1NQb7AknAoqa4uXx00iBpJZkTu
-STRIPE_PUBLISHABLE_KEY=pk_test_51RjUMaHGgvJKMFG1kWt008tQ6xGe8KZeVe1VI79uIl8ornuGakcvx9WAobAjKWFmTXoVDnzzbOWkUF9IW1g0XEnb00ZrAw6xeA
-AMPLITUDE_API_KEY=aa9af8f6da8b9dc451fb38893f5a33da
+STRIPE_SECRET_KEY=[user provided]
+STRIPE_PUBLISHABLE_KEY=[user provided]
+AMPLITUDE_API_KEY=[user provided]
 ```
 
 5. Click "Save Changes"
