@@ -1232,6 +1232,54 @@ def admin_panel():
     return send_file("templates/admin/admin-dashboard-enhanced.html")
 
 
+@app.route("/admin/founding-members")
+@login_required
+def admin_founding_members():
+    """Admin view of founding member signups"""
+    if not hasattr(current_user, "is_admin") or not current_user.is_admin:
+        flash("Admin access required", "danger")
+        return redirect(url_for("dashboard"))
+
+    import csv
+    
+    signups_file = Path("founding_member_signups.csv")
+    signups = []
+    
+    if signups_file.exists():
+        with open(signups_file, "r", newline="", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            signups = list(reader)
+    
+    spots_remaining = max(0, 100 - len(signups))
+    
+    return render_template(
+        "admin/founding-members.html",
+        signups=signups,
+        total_signups=len(signups),
+        spots_remaining=spots_remaining
+    )
+
+
+@app.route("/admin/founding-members/export")
+@login_required
+def admin_export_founding_members():
+    """Export founding member signups as CSV"""
+    if not hasattr(current_user, "is_admin") or not current_user.is_admin:
+        return jsonify({"error": "Admin access required"}), 403
+    
+    signups_file = Path("founding_member_signups.csv")
+    
+    if not signups_file.exists():
+        return jsonify({"error": "No signups found"}), 404
+    
+    return send_file(
+        signups_file,
+        mimetype="text/csv",
+        as_attachment=True,
+        download_name=f"founding_members_{datetime.utcnow().strftime('%Y%m%d')}.csv"
+    )
+
+
 @app.route("/account")
 @login_required
 def account_settings():
