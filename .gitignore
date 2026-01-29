@@ -208,3 +208,10 @@ security-audit-*.md
 # Week 1 secure data folder (if local)
 SecureData/
 BarberX-Confidential/
+
+# VeraCrypt encrypted containers - NEVER UPLOAD
+*.hc
+BarberX-Vault.hc
+
+# Git bundles (large backup files)
+*.bundle
