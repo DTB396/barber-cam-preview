@@ -44,6 +44,7 @@
     <link rel="stylesheet" href="{{ '/assets/css/components/barber-branding.css' | relative_url }}" />
     <link rel="stylesheet" href="{{ '/assets/css/components/ux-enhancements.css' | relative_url }}" />
     <link rel="stylesheet" href="{{ '/assets/css/components/header-improvements.css' | relative_url }}" />
+    <link rel="stylesheet" href="{{ '/assets/css/components/elegant-header.css' | relative_url }}" />
     <link rel="stylesheet" href="{{ '/assets/css/components/connect-compliance-footer.css' | relative_url }}" />
     
     {%- comment -%} Accessibility Enhancements - WCAG 2.1 Level AA {%- endcomment -%}
@@ -125,9 +126,9 @@
     {% include components/banners/maintenance-banner.html %}
     {% endif %}
 
-    {%- comment -%} Header navigation {%- endcomment -%}
+    {%- comment -%} Elegant Header Navigation - BarberX Legal Technologies {%- endcomment -%}
     {% unless page.hide_header %}
-      {% include components/navigation/header.html %}
+      {% include components/navigation/elegant-header.html %}
     {% endunless %}
 
     {%- comment -%} Main content area with layout-specific classes {%- endcomment -%}
@@ -162,6 +163,9 @@
     <script src="{{ '/assets/js/case-nav.js' | relative_url }}" defer></script>
     <script src="{{ '/assets/js/docket-navigator.js' | relative_url }}" defer></script>
     {% endif %}
+    
+    {%- comment -%} Elegant Header Navigation JavaScript {%- endcomment -%}
+    <script src="{{ '/assets/js/elegant-header.js' | relative_url }}" defer></script>
     
     {%- comment -%} UX Enhancements JavaScript {%- endcomment -%}
     <script src="{{ '/assets/js/ux-enhancements.js' | relative_url }}" defer></script>
